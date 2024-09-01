@@ -1,21 +1,27 @@
 #! /bin/bash
 
-# Transfer seasonal data into Sydney AWS Buckets
+# Set the folder where this script is located
+# so that other files can be found.
+run_path=$(dirname $(realpath  $0))
 
-MISSING_INPUT=60
-MISSING_FILE=61
-MISSING_FOLDER=62
-MISSING_DISK=63
-MISSING_MOUNT=64
+# Load useful routines from bump
+# https://github.com/gusgw/bump
+. ${run_path}/bump/bump.sh
 
-BAD_CONFIGURATION=70
-UNSAFE=71
+# MISSING_INPUT=60
+# MISSING_FILE=61
+# MISSING_FOLDER=62
+# MISSING_DISK=63
+# MISSING_MOUNT=64
 
-SYSTEM_UNIT_FAILURE=80
-SECURITY_FAILURE=81
-NETWORK_ERROR=83
+# BAD_CONFIGURATION=70
+# UNSAFE=71
 
-TRAPPED_SIGNAL=113
+# SYSTEM_UNIT_FAILURE=80
+# SECURITY_FAILURE=81
+# NETWORK_ERROR=83
+
+# TRAPPED_SIGNAL=113
 
 WAIT=5.0
 
@@ -23,27 +29,30 @@ MAX_SUBPROCESSES=16
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
+export RULE="***"
+
 export NICE=19
 
-function set_stamp {
-    # Store a stamp used to label files
-    # and messages created in this script.
-    local hostname=$(hostnamectl status | head -n 1 | sed 's/.*: \(.*\)/\1/')
-    export STAMP="$(date '+%Y%m%d'-${hostname})-$$"
-    return 0
-}
+# function set_stamp {
+#     # Store a stamp used to label files
+#     # and messages created in this script.
+#     local hostname=$(hostnamectl status | head -n 1 | sed 's/.*: \(.*\)/\1/')
+#     export STAMP="$(date '+%Y%m%d'-${hostname})-$$"
+#     return 0
+# }
 
-function not_empty {
-    # Ensure that an expression is not empty
-    # then cleanup and quit if it is
-    local description=$1
-    local check=$2
-    if [ -z "$check" ]; then
-        >&2 echo "${STAMP}: cannot run without ${description}"
-        cleanup "${MISSING_INPUT}"
-    fi
-    return 0
-}
+# function not_empty {
+#     # Ensure that an expression is not empty
+#     # then cleanup and quit if it is
+#     local description=$1
+#     local check=$2
+#     if [ -z "$check" ]; then
+#         >&2 echo "${STAMP}: cannot run without ${description}"
+#         cleanup "${MISSING_INPUT}"
+#     fi
+#     return 0
+# }
+
 function _p_not_empty {
     # Ensure that an expression is not empty
     # then cleanup and quit if it is
@@ -57,15 +66,16 @@ function _p_not_empty {
 }
 export -f _p_not_empty
 
-function log_setting {
-    # Make sure a setting is provided
-    # and report it
-    local description=$1
-    local setting=$2
-    not_empty "date stamp" "${STAMP}"
-    not_empty "$description" "$setting"
-    >&2 echo "${STAMP}: ${description} is ${setting}"
-}
+# function log_setting {
+#     # Make sure a setting is provided
+#     # and report it
+#     local description=$1
+#     local setting=$2
+#     not_empty "date stamp" "${STAMP}"
+#     not_empty "$description" "$setting"
+#     >&2 echo "${STAMP}: ${description} is ${setting}"
+# }
+
 function _p_log_setting {
     # Make sure a setting is provided
     # and report it
@@ -77,23 +87,24 @@ function _p_log_setting {
 }
 export -f _p_log_setting
 
-function report {
-    # Inform the user of a non-zero return
-    # code, cleanup, and if an exit
-    # message is provided as a third argument
-    # also exit
-    local rc=$1
-    local description=$2
-    local exit_message=$3
-    >&2 echo "${STAMP}: ${description} exited with code $rc"
-    if [ -z "$exit_message" ]; then
-        >&2 echo "${STAMP}: continuing . . ."
-    else
-        >&2 echo "${STAMP}: $exit_message"
-        cleanup $rc
-    fi
-    return $rc
-}
+# function report {
+#     # Inform the user of a non-zero return
+#     # code, cleanup, and if an exit
+#     # message is provided as a third argument
+#     # also exit
+#     local rc=$1
+#     local description=$2
+#     local exit_message=$3
+#     >&2 echo "${STAMP}: ${description} exited with code $rc"
+#     if [ -z "$exit_message" ]; then
+#         >&2 echo "${STAMP}: continuing . . ."
+#     else
+#         >&2 echo "${STAMP}: $exit_message"
+#         cleanup $rc
+#     fi
+#     return $rc
+# }
+
 function _p_report {
     # Inform the user of a non-zero return
     # code, cleanup, and if an exit
@@ -113,17 +124,18 @@ function _p_report {
 }
 export -f _p_report
 
-function check_exists {
-    # Make sure a file or folder or link exists
-    # then cleanup and quit if not
-    local file_name=$1
-    log_setting "file or directory name that must exist" "$file_name"
-    if ! [ -e "$file_name" ]; then
-        >&2 echo "${STAMP}: cannot find $file_name"
-        cleanup "$MISSING_FILE"
-    fi
-    return 0
-}
+# function check_exists {
+#     # Make sure a file or folder or link exists
+#     # then cleanup and quit if not
+#     local file_name=$1
+#     log_setting "file or directory name that must exist" "$file_name"
+#     if ! [ -e "$file_name" ]; then
+#         >&2 echo "${STAMP}: cannot find $file_name"
+#         cleanup "$MISSING_FILE"
+#     fi
+#     return 0
+# }
+
 function _p_check_exists {
     # Make sure a file or folder or link exists
     # then cleanup and quit if not
@@ -180,7 +192,9 @@ function kids {
 }
 export -f kids
 
-function cleanup {
+cleanup_functions+=('cleanup_run')
+
+function cleanup_run {
 
     ######################################
     # If using the report function here, #
@@ -191,7 +205,7 @@ function cleanup {
     ######################################
 
     local rc=$1
-    >&2 echo "***"
+    >&2 echo "---"
     >&2 echo "${STAMP}: exiting cleanly with code ${rc}. . ."
 
     if [ "$clean" == "input" ] || [ "$clean" == "all" ]; then
@@ -239,9 +253,10 @@ function cleanup {
     rm -rf $ramdisk
 
     >&2 echo "${STAMP}: . . . all done with code ${rc}"
-
+    >&2 echo "---"
     exit $rc
 }
+
 function _p_cleanup {
 
     # Exported version of the function cleanup
@@ -263,11 +278,11 @@ function _p_cleanup {
 }
 export -f _p_cleanup
 
-function handle_signal {
-    # cleanup and use error code if we trap a signal
-    >&2 echo "${STAMP}: trapped signal during maintenance"
-    cleanup "${TRAPPED_SIGNAL}"
-}
+# function handle_signal {
+#     # cleanup and use error code if we trap a signal
+#     >&2 echo "${STAMP}: trapped signal during maintenance"
+#     cleanup "${TRAPPED_SIGNAL}"
+# }
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
 # TODO: Convert to niceload
@@ -303,6 +318,7 @@ function run {
     nice -n "$NICE" stress --verbose \
                            --cpu 4 &
     stressid=$!
+    # TODO check $stressid is still running
     echo "${stressid}" >> "${ramdisk}/workers"
     niceload -v --load 4.1 -p ${stressid} &
     for kid in $(kids ${stressid}); do
@@ -330,22 +346,24 @@ job="$2"
 iext="input"
 oext="output"
 
-input="dummy:/mnt/data/chips/input"
+input="dummy:/mnt/data/chips0/input"
 inglob="*.${iext}"
 outglob="*.${oext}"
-workspace="/mnt/data/chips/work"
+workspace="/mnt/data/chips0/work"
 workfactor=1.2
-logspace="/mnt/data/chips/log"
-output="dummy:/mnt/data/chips/output"
+logspace="/mnt/data/chips0/log"
+output="dummy:/mnt/data/chips0/output"
 
 log_setting "source for input data" "${input}"
 log_setting "workspace for data" "${workspace}"
 log_setting "job to process" "${job}"
 log_setting "destination for outputs" "${output}"
 
+decrypt=""
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
+# log_setting "decryption key" "$decrypt"
 log_setting "signing key" "$sign"
 log_setting "encryption key" "$encrypt"
 
@@ -354,16 +372,21 @@ log_setting "encryption key" "$encrypt"
 # This folder is accessed by the worker function 'run'.
 
 destination="${workspace}/${job}"
+log_setting "workspace subfolder for this job" "${destination}"
 mkdir -p "${destination}" || report $? "create workspace for $job"
 logs="${logspace}/${job}"
+log_setting "log subfolder for this job" "${logs}"
 mkdir -p "${logs}" || report $? "create log folder for $job"
 ramdisk="/dev/shm/${job}/$$/"
+log_setting "ramdisk space for this job" "${ramdisk}"
 mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
 
 insize=$(nice -n "${NICE}" rclone lsl "${input}/" \
                                       --include "${inglob}" |\
                            awk '{sum+=$1} END {print sum;}')
+log_setting "size of inputs" "${insize}"
 worksize=$(echo ${insize}*${workfactor}+1 | bc -l | sed 's/\([0-9]*\)\..*$/\1/')
+log_setting "size needed for workspace" "${worksize}"
 
 # Get the input data
 # TODO: Convert to niceload
