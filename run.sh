@@ -7,6 +7,7 @@ run_path=$(dirname $(realpath  $0))
 # Load useful routines from bump
 # https://github.com/gusgw/bump
 . ${run_path}/bump/bump.sh
+. ${run_path}/bump/parallel.sh
 
 # MISSING_INPUT=60
 # MISSING_FILE=61
@@ -53,18 +54,18 @@ export NICE=19
 #     return 0
 # }
 
-function _p_not_empty {
-    # Ensure that an expression is not empty
-    # then cleanup and quit if it is
-    local description=$1
-    local check=$2
-    if [ -z "$check" ]; then
-        >&2 echo "${STAMP} ${PARALLEL_PID}: cannot run without ${description}"
-        _p_cleanup "${MISSING_INPUT}"
-    fi
-    return 0
-}
-export -f _p_not_empty
+# function parallel_not_empty {
+#     # Ensure that an expression is not empty
+#     # then cleanup and quit if it is
+#     local description=$1
+#     local check=$2
+#     if [ -z "$check" ]; then
+#         >&2 echo "${STAMP} ${PARALLEL_PID}: cannot run without ${description}"
+#         parallel_cleanup "${MISSING_INPUT}"
+#     fi
+#     return 0
+# }
+# export -f parallel_not_empty
 
 # function log_setting {
 #     # Make sure a setting is provided
@@ -76,16 +77,16 @@ export -f _p_not_empty
 #     >&2 echo "${STAMP}: ${description} is ${setting}"
 # }
 
-function _p_log_setting {
-    # Make sure a setting is provided
-    # and report it
-    local description=$1
-    local setting=$2
-    _p_not_empty "date stamp" "${STAMP}"
-    _p_not_empty "$description" "$setting"
-    >&2 echo "${STAMP} ${PARALLEL_PID}: ${description} is ${setting}"
-}
-export -f _p_log_setting
+# function parallel_log_setting {
+#     # Make sure a setting is provided
+#     # and report it
+#     local description=$1
+#     local setting=$2
+#     parallel_not_empty "date stamp" "${STAMP}"
+#     parallel_not_empty "$description" "$setting"
+#     >&2 echo "${STAMP} ${PARALLEL_PID}: ${description} is ${setting}"
+# }
+# export -f parallel_log_setting
 
 # function report {
 #     # Inform the user of a non-zero return
@@ -105,24 +106,24 @@ export -f _p_log_setting
 #     return $rc
 # }
 
-function _p_report {
-    # Inform the user of a non-zero return
-    # code, cleanup, and if an exit
-    # message is provided as a third argument
-    # also exit
-    local rc=$1
-    local description=$2
-    local exit_message=$3
-    >&2 echo "${STAMP} ${PARALLEL_PID}: ${description} exited with code $rc"
-    if [ -z "$exit_message" ]; then
-        >&2 echo "${STAMP} ${PARALLEL_PID}: continuing . . ."
-    else
-        >&2 echo "${STAMP} ${PARALLEL_PID}: $exit_message"
-        _p_cleanup $rc
-    fi
-    return $rc
-}
-export -f _p_report
+# function parallel_report {
+#     # Inform the user of a non-zero return
+#     # code, cleanup, and if an exit
+#     # message is provided as a third argument
+#     # also exit
+#     local rc=$1
+#     local description=$2
+#     local exit_message=$3
+#     >&2 echo "${STAMP} ${PARALLEL_PID}: ${description} exited with code $rc"
+#     if [ -z "$exit_message" ]; then
+#         >&2 echo "${STAMP} ${PARALLEL_PID}: continuing . . ."
+#     else
+#         >&2 echo "${STAMP} ${PARALLEL_PID}: $exit_message"
+#         parallel_cleanup $rc
+#     fi
+#     return $rc
+# }
+# export -f parallel_report
 
 # function check_exists {
 #     # Make sure a file or folder or link exists
@@ -136,18 +137,18 @@ export -f _p_report
 #     return 0
 # }
 
-function _p_check_exists {
-    # Make sure a file or folder or link exists
-    # then cleanup and quit if not
-    local file_name=$1
-    _p_log_setting "file or directory name that must exist" "$file_name"
-    if ! [ -e "$file_name" ]; then
-        >&2 echo "${STAMP} ${PARALLEL_PID}: cannot find $file_name"
-        _p_cleanup "$MISSING_FILE"
-    fi
-    return 0
-}
-export -f _p_check_exists
+# function parallel_check_exists {
+#     # Make sure a file or folder or link exists
+#     # then cleanup and quit if not
+#     local file_name=$1
+#     parallel_log_setting "file or directory name that must exist" "$file_name"
+#     if ! [ -e "$file_name" ]; then
+#         >&2 echo "${STAMP} ${PARALLEL_PID}: cannot find $file_name"
+#         parallel_cleanup "$MISSING_FILE"
+#     fi
+#     return 0
+# }
+# export -f parallel_check_exists
 
 function size_distribution {
     local folder=$1
@@ -169,28 +170,28 @@ function size_distribution {
     return 0
 }
 
-function kids {
+# function kids {
 
-    # TODO make sure recursive output is
-    # TODO not on multiple lines
+#     # TODO make sure recursive output is
+#     # TODO not on multiple lines
 
-    local pid="$1"
+#     local pid="$1"
 
-    _p_not_empty "pid to check for children" "$pid"
+#     parallel_not_empty "pid to check for children" "$pid"
 
-    for t in /proc/${pid}/task/*; do
-        local children="${t}/children"
-        if [ -e "$children" ]; then
-            for kid in $(cat ${children}); do
-                echo $kid
-                kids "$kid"
-            done
-        fi
-    done
+#     for t in /proc/${pid}/task/*; do
+#         local children="${t}/children"
+#         if [ -e "$children" ]; then
+#             for kid in $(cat ${children}); do
+#                 echo $kid
+#                 kids "$kid"
+#             done
+#         fi
+#     done
 
-    return 0
-}
-export -f kids
+#     return 0
+# }
+# export -f kids
 
 cleanup_functions+=('cleanup_run')
 
@@ -257,26 +258,26 @@ function cleanup_run {
     exit $rc
 }
 
-function _p_cleanup {
+# function parallel_cleanup {
 
-    # Exported version of the function cleanup
-    # for use with GNU parallel.
+#     # Exported version of the function cleanup
+#     # for use with GNU parallel.
 
-    #########################################
-    # If using the _p_report function here, #
-    # make sure it has NO THIRD ARGUMENT    #
-    # or there will be an infinite loop!    #
-    # This function may be used to          #
-    # handle trapped signals                #
-    #########################################
+#     #########################################
+#     # If using the parallel_report function here, #
+#     # make sure it has NO THIRD ARGUMENT    #
+#     # or there will be an infinite loop!    #
+#     # This function may be used to          #
+#     # handle trapped signals                #
+#     #########################################
 
-    local rc=$1
-    >&2 echo "***"
-    >&2 echo "${STAMP} ${PARALLEL_PID}: exiting subprocess cleanly with code ${rc} . . ."
-    >&2 echo "${STAMP} ${PARALLEL_PID}: . . . all done with code ${rc}"
-    exit $rc
-}
-export -f _p_cleanup
+#     local rc=$1
+#     >&2 echo "***"
+#     >&2 echo "${STAMP} ${PARALLEL_PID}: exiting subprocess cleanly with code ${rc} . . ."
+#     >&2 echo "${STAMP} ${PARALLEL_PID}: . . . all done with code ${rc}"
+#     exit $rc
+# }
+# export -f parallel_cleanup
 
 # function handle_signal {
 #     # cleanup and use error code if we trap a signal
@@ -300,18 +301,18 @@ function run {
 
     echo "$PARALLEL_PID" >> "${ramdisk}/workers"
 
-    _p_log_setting "workspace" "${workspace}"
-    _p_log_setting "job for parallel worker" "${job}"
-    _p_log_setting "file to work on" "${input}"
+    parallel_log_setting "workspace" "${workspace}"
+    parallel_log_setting "job for parallel worker" "${job}"
+    parallel_log_setting "file to work on" "${input}"
 
-    _p_check_exists "${workspace}"
-    _p_check_exists "${input}"
+    parallel_check_exists "${workspace}"
+    parallel_check_exists "${input}"
 
     destination="${workspace}/${job}"
-    _p_log_setting "destination for results" "$destination"
+    parallel_log_setting "destination for results" "$destination"
     mkdir -p "${destination}" ||\
-        _p_report "$?" "make folder if necessary"
-    _p_check_exists "${destination}"
+        parallel_report "$?" "make folder if necessary"
+    parallel_check_exists "${destination}"
 
     # TODO Spawn the process then periodically save its resource
     # TODO usage then report its exit code.
@@ -325,9 +326,9 @@ function run {
         echo "${kid}" >> "${ramdisk}/workers"
         niceload -v --load 4.1 -p ${kid} &
     done
-    # wait $stressid || _p_report $? "working"
+    # wait $stressid || parallel_report $? "working"
     sleep 120
-    kill $stressid || _p_report $? "ending ${job}"
+    kill $stressid || parallel_report $? "ending ${job}"
 
     dd if=/dev/random of="${destination}/chips.output" bs=1G count=1
 
