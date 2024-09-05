@@ -193,6 +193,7 @@ log_setting "size needed for workspace" "${worksize}"
 nice -n "${NICE}" rclone sync \
             "${input}/" \
             "${destination}/" \
+            --config "${run_path}/rclone.config" \
             --progress \
             --log-level INFO \
             --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
@@ -235,6 +236,7 @@ find "${destination}" -name "${outglob}" |\
 nice -n "${NICE}" rclone sync \
             "${destination}/" \
             "${output}" \
+            --config "${run_path}/rclone.config" \
             --progress \
             --log-level INFO \
             --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
