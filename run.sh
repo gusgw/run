@@ -141,6 +141,7 @@ function run {
 
     dd if=/dev/random of="${destination}/chips.output" bs=1G count=1
 
+    parallel_cleanup 0
     return 0
 }
 export -f run
