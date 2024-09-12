@@ -84,6 +84,16 @@ function cleanup_run {
     exit $rc
 }
 
+parallel_cleanup_functions+=('parallel_cleanup_run')
+
+function parallel_cleanup_run {
+
+    local rc=$1
+    >&2 echo "---"
+    >&2 echo "${STAMP} ${PARALLEL_PID}: exiting cleanly with code ${rc}. . ."
+    >&2 echo "${STAMP} ${PARALLEL_PID}: . . . all done with code ${rc}"
+}
+
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
 # TODO: Convert to niceload
 function run {
@@ -131,6 +141,7 @@ function run {
 
     dd if=/dev/random of="${destination}/chips.output" bs=1G count=1
 
+    parallel_cleanup 0
     return 0
 }
 export -f run
@@ -193,7 +204,7 @@ log_setting "size needed for workspace" "${worksize}"
 nice -n "${NICE}" rclone sync \
             "${input}/" \
             "${destination}/" \
-            --config "${run_path}/rclone.config" \
+            --config "${run_path}/rclone.conf" \
             --progress \
             --log-level INFO \
             --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
@@ -236,7 +247,7 @@ find "${destination}" -name "${outglob}" |\
 nice -n "${NICE}" rclone sync \
             "${destination}/" \
             "${output}" \
-            --config "${run_path}/rclone.config" \
+            --config "${run_path}/rclone.conf" \
             --progress \
             --log-level INFO \
             --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
