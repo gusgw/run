@@ -84,6 +84,16 @@ function cleanup_run {
     exit $rc
 }
 
+parallel_cleanup_functions+=('parallel_cleanup_run')
+
+function parallel_cleanup_run {
+
+    local rc=$1
+    >&2 echo "---"
+    >&2 echo "${STAMP} ${PARALLEL_PID}: exiting cleanly with code ${rc}. . ."
+    >&2 echo "${STAMP} ${PARALLEL_PID}: . . . all done with code ${rc}"
+}
+
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
 # TODO: Convert to niceload
 function run {
