@@ -99,7 +99,7 @@ function run {
     # TODO Spawn the process then periodically save its resource
     # TODO usage then report its exit code.
     nice -n "$NICE" stress --verbose --cpu 2 &
-     #---END  TEST---
+    #---END  TEST---
 
     mainid=$!
     # TODO check $stressid is still running
