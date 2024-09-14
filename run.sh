@@ -15,6 +15,30 @@ MAX_SUBPROCESSES=16
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
+clean="$1"
+job="$2"
+
+iext="input"
+oext="output"
+
+input="dummy:/mnt/data/chips/input"
+inglob="*.${iext}"
+outglob="*.${oext}"
+workspace="/mnt/data/chips/work"
+workfactor=1.2
+logspace="/mnt/data/chips/log"
+output="dummy:/mnt/data/chips/output"
+
+set_stamp
+log_setting "source for input data" "${input}"
+log_setting "workspace for data" "${workspace}"
+log_setting "job to process" "${job}"
+log_setting "destination for outputs" "${output}"
+
+decrypt=""
+sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
+encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+
 export RULE="***"
 
 export NICE=19
@@ -153,33 +177,8 @@ function run {
 }
 export -f run
 
-set_stamp
-
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
-
-clean="$1"
-job="$2"
-
-iext="input"
-oext="output"
-
-input="dummy:/mnt/data/chips/input"
-inglob="*.${iext}"
-outglob="*.${oext}"
-workspace="/mnt/data/chips/work"
-workfactor=1.2
-logspace="/mnt/data/chips/log"
-output="dummy:/mnt/data/chips/output"
-
-log_setting "source for input data" "${input}"
-log_setting "workspace for data" "${workspace}"
-log_setting "job to process" "${job}"
-log_setting "destination for outputs" "${output}"
-
-decrypt=""
-sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
-encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
 # log_setting "decryption key" "$decrypt"
 log_setting "signing key" "$sign"
