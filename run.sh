@@ -111,6 +111,8 @@ function run {
     echo "$PARALLEL_PID parallel pid" >> "${ramdisk}/workers"
 
     parallel_log_setting "workspace" "${workspace}"
+    parallel_log_setting "log destination" "${logs}"
+    parallel_log_setting "ramdisk space" "${ramdisk}"
     parallel_log_setting "job for parallel worker" "${job}"
     parallel_log_setting "file to work on" "${input}"
 
@@ -121,7 +123,7 @@ function run {
     outname=${inputname/\.input/\.${job}\.output}
 
     destination="${workspace}/${job}"
-    parallel_log_setting "destination for results" "$destination"
+    parallel_log_setting "working directory" "$destination"
     mkdir -p "${destination}" ||\
         parallel_report "$?" "make folder if necessary"
     parallel_check_exists "${destination}"
