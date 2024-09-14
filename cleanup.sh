@@ -55,8 +55,8 @@ function cleanup_run {
         done
     done < $ramdisk/workers
 
-    # rm $ramdisk/workers
-    # rm -rf $ramdisk
+    rm $ramdisk/workers
+    rm -rf $ramdisk
 
     >&2 echo "${STAMP}: . . . all done with code ${rc}"
     >&2 echo "---"

@@ -9,9 +9,9 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
 
-WAIT=10.0
+export WAIT=5.0
 
-MAX_SUBPROCESSES=16
+MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
@@ -45,6 +45,10 @@ export target_load=4.1
 decrypt=""
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+
+# Run type should be test if we're using a dummy
+# job to test the script
+export run_type="test"
 
 set_stamp
 log_setting "cleanup when done" "${clean}"
@@ -85,43 +89,65 @@ function run {
     parallel_check_exists "${input}"
     parallel_check_exists "${ramdisk}"
 
-    #---TEST CODE---
-    inputname=$(basename ${input})
-    outname=${inputname/\.input/\.${job}\.output}
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        inputname=$(basename ${input})
+        outname=${inputname/\.input/\.${job}\.output}
+    #---END---------
+    fi
 
     parallel_log_setting "working directory" "$work"
     mkdir -p "${work}" ||\
         parallel_report "$?" "make folder if necessary"
     parallel_check_exists "${work}"
 
-    #---TEST CODE---
-    # TODO Spawn the process then periodically save its resource
-    # TODO usage then report its exit code.
-    nice -n "$NICE" stress --verbose --cpu 2 &
-     #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        nice -n "$NICE" stress --verbose --cpu 2 &
+        mainid=$!
+    #---END---------
+    else
+    #---REAL CODE---
+        echo "working"
+        mainid=$!
+    #---END---------
+    fi
 
-    mainid=$!
-    # TODO check $stressid is still running
-    echo "${mainid} main job" >> "${ramdisk}/workers"
-    niceload -v --load "${target_load}" -p "${mainid}" &
-    sleep 10
-    for kid in $(kids ${mainid}); do
-        echo "${kid} child job" >> "${ramdisk}/workers"
-        niceload -v --load "${target_load}" -p "${kid}" &
-        parallel_log_setting "a process under load control" "${kid}"
-    done
-    # wait $mainid || parallel_report $? "working"
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        for k in {1..3}; do 
+            apply_niceload "${mainid}" \
+                           "${ramdisk}/workers" \
+                           "${target_load}"
+            sleep ${WAIT};
+        done
+    #---END---------
+    else
+    #---REAL-CODE---
+        while kill -0 "${mainid}" 2> /dev/null; do
+            apply_niceload "${mainid}" \
+                           "${ramdisk}/workers" \
+                           "${target_load}"
+            sleep ${WAIT};
+        done
+    #---END---------
+    fi
 
-    #---TEST CODE---
-    sleep 240
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        kill $mainid || parallel_report $? "ending test ${job}"
+    #---END---------
+    else
+    #---REAL-CODE---
+        wait $mainid || parallel_report $? "working"
+    #---END---------
+    fi
 
-    kill $mainid || parallel_report $? "ending ${job}"
-
-    #---TEST CODE---
-    dd if=/dev/random of="${work}/${outname}" bs=1G count=1
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        dd if=/dev/random of="${work}/${outname}" bs=1G count=1
+    #---END---------
+    fi
 
     parallel_cleanup 0
     return 0
@@ -144,12 +170,15 @@ nice -n "${NICE}" rclone sync \
             --transfers "${INBOUND_TRANSFERS}" \
             --include "${inglob}" ||\
     report $? "download input data"
+print_rule
 
 ######################################################################
 # Run the job
 
+
 find "${work}" -name "${inglob}" |\
-    parallel --results "${logs}/run/{/}/" \
+    parallel --eta --tag --tagstring {} \
+             --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
@@ -169,12 +198,15 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
 done
+echo
+print_rule
 
 ######################################################################
 # Encrypt the results
 
 find "${work}" -name "${outglob}" |\
-    parallel --results "${logs}/gpg/{/}/" \
+    parallel --eta --tag --tagstring {} \
+             --results "${logs}/gpg/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.gpg.log" \
              --jobs "$MAX_SUBPROCESSES" \
         nice -n "${NICE}" gpg --output {}.gpg \
@@ -193,11 +225,13 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     free_memory_report "${job} gpg" \
                        "${logs}/${STAMP}.${job}.$$.free"
 done
+echo
+print_rule
 
 ######################################################################
 # Save the results to the 
 
-nice -n "${NICE}" rclone sync \
+nice -n "${NICE}" rclone copy \
             "${work}/" \
             "${output}/" \
             --config "${run_path}/rclone.conf" \
