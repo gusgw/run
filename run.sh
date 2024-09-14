@@ -152,7 +152,23 @@ find "${work}" -name "${inglob}" |\
     parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
-        run "${workspace}" "${logs}" "${ramdisk}" "${job}" {}
+        run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
+
+parallel_pid=$!
+while kill -0 "$parallel_pid" 2> /dev/null; do
+    sleep ${WAIT}
+    load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
+    if [ -f "$ramdisk/workers" ]; then
+        while read pid; do
+            if kill -0 "${pid%% *}" 2> /dev/null; then
+                memory_report "${job} run" "${pid%% *}" \
+                              "${logs}/${STAMP}.${job}.${pid%% *}.memory"
+            fi
+        done < $ramdisk/workers
+    fi
+    free_memory_report "${job} run" \
+                       "${logs}/${STAMP}.${job}.$$.free"
+done
 
 ######################################################################
 # Encrypt the results
@@ -169,7 +185,14 @@ find "${work}" -name "${outglob}" |\
                               --always-trust \
                               --lock-multiple \
                               --sign --local-user "$sign" \
-                              --encrypt --recipient "$encrypt" {}
+                              --encrypt --recipient "$encrypt" {} &
+parallel_pid=$!
+while kill -0 "$parallel_pid" 2> /dev/null; do
+    sleep ${WAIT}
+    load_report "${job} gpg"  "${logs}/${STAMP}.${job}.$$.load"
+    free_memory_report "${job} gpg" \
+                       "${logs}/${STAMP}.${job}.$$.free"
+done
 
 ######################################################################
 # Save the results to the 
