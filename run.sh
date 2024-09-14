@@ -117,6 +117,9 @@ function run {
     parallel_check_exists "${workspace}"
     parallel_check_exists "${input}"
 
+    inputname=$(basename ${input})
+    outname=${inputname/\.input/\.${job}\.output}
+
     destination="${workspace}/${job}"
     parallel_log_setting "destination for results" "$destination"
     mkdir -p "${destination}" ||\
@@ -139,7 +142,7 @@ function run {
     sleep 120
     kill $stressid || parallel_report $? "ending ${job}"
 
-    dd if=/dev/random of="${destination}/chips.output" bs=1G count=1
+    dd if=/dev/random of="${destination}/${outname}" bs=1G count=1
 
     parallel_cleanup 0
     return 0
