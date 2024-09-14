@@ -142,7 +142,6 @@ function run {
     # File to work on
     local input="$5"
 
-    echo "$PARALLEL_PID parallel pid" >> "${ramdisk}/workers"
 
     parallel_log_setting "workspace" "${workspace}"
     parallel_log_setting "log destination" "${logs}"
@@ -239,8 +238,7 @@ nice -n "${NICE}" rclone sync \
 # Run the job
 
 find "${destination}" -name "${inglob}" |\
-    parallel --bar \
-             --results "${logs}/run/{/}/" \
+    parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
         run "${workspace}" "${logs}" "${ramdisk}" "${job}" {}
