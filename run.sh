@@ -179,23 +179,26 @@ function run {
     # TODO Spawn the process then periodically save its resource
     # TODO usage then report its exit code.
     nice -n "$NICE" stress --verbose \
-                           --cpu 4 &
-    stressid=$!
+                           --cpu 2 &
      #---END  TEST---
+
+    mainid=$!
     # TODO check $stressid is still running
-    echo "${stressid} main job" >> "${ramdisk}/workers"
-    niceload -v --load 4.1 -p ${stressid} &
+    echo "${mainid} main job" >> "${ramdisk}/workers"
+    niceload -v --load 4.1 -p ${mainid} &
     sleep 10
-    for kid in $(kids ${stressid}); do
+    for kid in $(kids ${mainid}); do
         echo "${kid} child job" >> "${ramdisk}/workers"
         niceload -v --load 4.1 -p ${kid} &
         parallel_log_setting "a process under load control" "${kid}"
     done
-    # wait $stressid || parallel_report $? "working"
+    # wait $mainid || parallel_report $? "working"
+
     #---TEST CODE---
     sleep 120
-    kill $stressid || parallel_report $? "ending ${job}"
     #---END  TEST---
+
+    kill $mainid || parallel_report $? "ending ${job}"
 
     #---TEST CODE---
     dd if=/dev/random of="${destination}/${outname}" bs=1G count=1
