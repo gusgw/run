@@ -134,6 +134,7 @@ function run {
     # TODO check $stressid is still running
     echo "${stressid} main job" >> "${ramdisk}/workers"
     niceload -v --load 4.1 -p ${stressid} &
+    sleep 10
     for kid in $(kids ${stressid}); do
         echo "${kid} child job" >> "${ramdisk}/workers"
         niceload -v --load 4.1 -p ${kid} &
