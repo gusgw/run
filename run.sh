@@ -178,8 +178,7 @@ function run {
     #---TEST CODE---
     # TODO Spawn the process then periodically save its resource
     # TODO usage then report its exit code.
-    nice -n "$NICE" stress --verbose \
-                           --cpu 2 &
+    nice -n "$NICE" stress --verbose --cpu 2 &
      #---END  TEST---
 
     mainid=$!
