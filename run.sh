@@ -37,6 +37,9 @@ workfactor=1.2
 # Where should logs be stored?
 logspace="/mnt/data/chips/log"
 
+# Set a target system load visible to subprocesses
+export target_load=4.1
+
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
 decrypt=""
@@ -96,11 +99,11 @@ function run {
     mainid=$!
     # TODO check $stressid is still running
     echo "${mainid} main job" >> "${ramdisk}/workers"
-    niceload -v --load 4.1 -p ${mainid} &
+    niceload -v --load "${target_load}" -p "${mainid}" &
     sleep 10
     for kid in $(kids ${mainid}); do
         echo "${kid} child job" >> "${ramdisk}/workers"
-        niceload -v --load 4.1 -p ${kid} &
+        niceload -v --load "${target_load}" -p "${kid}" &
         parallel_log_setting "a process under load control" "${kid}"
     done
     # wait $mainid || parallel_report $? "working"
