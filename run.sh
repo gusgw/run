@@ -164,13 +164,13 @@ job="$2"
 iext="input"
 oext="output"
 
-input="dummy:/mnt/data/chips0/input"
+input="dummy:/mnt/data/chips/input"
 inglob="*.${iext}"
 outglob="*.${oext}"
-workspace="/mnt/data/chips0/work"
+workspace="/mnt/data/chips/work"
 workfactor=1.2
-logspace="/mnt/data/chips0/log"
-output="dummy:/mnt/data/chips0/output"
+logspace="/mnt/data/chips/log"
+output="dummy:/mnt/data/chips/output"
 
 log_setting "source for input data" "${input}"
 log_setting "workspace for data" "${workspace}"
