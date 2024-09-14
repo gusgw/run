@@ -4,7 +4,7 @@
 # so that other files can be found.
 run_path=$(dirname $(realpath  $0))
 
-# Load useful routines from bump
+# Load useful routines
 # https://github.com/gusgw/bump
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
@@ -123,7 +123,6 @@ function cleanup_run {
 parallel_cleanup_functions+=('parallel_cleanup_run')
 
 function parallel_cleanup_run {
-
     local rc=$1
     >&2 echo "---"
     >&2 echo "${STAMP} ${PARALLEL_PID}: exiting cleanly with code ${rc}. . ."
@@ -131,7 +130,6 @@ function parallel_cleanup_run {
 }
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
-# TODO: Convert to niceload
 function run {
     # The workspace is the top level folder
     local workspace="$1"
@@ -155,8 +153,10 @@ function run {
     parallel_check_exists "${workspace}"
     parallel_check_exists "${input}"
 
+    #---TEST CODE---
     inputname=$(basename ${input})
     outname=${inputname/\.input/\.${job}\.output}
+    #---END  TEST---
 
     destination="${workspace}/${job}"
     parallel_log_setting "working directory" "$destination"
@@ -164,11 +164,13 @@ function run {
         parallel_report "$?" "make folder if necessary"
     parallel_check_exists "${destination}"
 
+    #---TEST CODE---
     # TODO Spawn the process then periodically save its resource
     # TODO usage then report its exit code.
     nice -n "$NICE" stress --verbose \
                            --cpu 4 &
     stressid=$!
+     #---END  TEST---
     # TODO check $stressid is still running
     echo "${stressid} main job" >> "${ramdisk}/workers"
     niceload -v --load 4.1 -p ${stressid} &
@@ -179,10 +181,14 @@ function run {
         parallel_log_setting "a process under load control" "${kid}"
     done
     # wait $stressid || parallel_report $? "working"
+    #---TEST CODE---
     sleep 120
     kill $stressid || parallel_report $? "ending ${job}"
+    #---END  TEST---
 
+    #---TEST CODE---
     dd if=/dev/random of="${destination}/${outname}" bs=1G count=1
+    #---END  TEST---
 
     parallel_cleanup 0
     return 0
@@ -197,12 +203,10 @@ log_setting "signing key" "$sign"
 log_setting "encryption key" "$encrypt"
 
 ######################################################################
-# Make workspace.
-# This folder is accessed by the worker function 'run'.
-
 destination="${workspace}/${job}"
 log_setting "workspace subfolder for this job" "${destination}"
 mkdir -p "${destination}" || report $? "create workspace for $job"
+
 logs="${logspace}/${job}"
 log_setting "log subfolder for this job" "${logs}"
 mkdir -p "${logs}" || report $? "create log folder for $job"
@@ -217,8 +221,9 @@ log_setting "size of inputs" "${insize}"
 worksize=$(echo ${insize}*${workfactor}+1 | bc -l | sed 's/\([0-9]*\)\..*$/\1/')
 log_setting "size needed for workspace" "${worksize}"
 
+######################################################################
 # Get the input data
-# TODO: Convert to niceload
+
 nice -n "${NICE}" rclone sync \
             "${input}/" \
             "${destination}/" \
@@ -231,7 +236,7 @@ nice -n "${NICE}" rclone sync \
     report $? "download input data"
 
 ######################################################################
-# Process the data
+# Run the job
 
 find "${destination}" -name "${inglob}" |\
     parallel --bar \
@@ -242,7 +247,6 @@ find "${destination}" -name "${inglob}" |\
 
 ######################################################################
 # Encrypt the results
-# TODO: Include niceload and or semaphore here
 
 find "${destination}" -name "${outglob}" |\
     parallel --results "${logs}/gpg/{/}/" \
@@ -260,7 +264,6 @@ find "${destination}" -name "${outglob}" |\
 
 ######################################################################
 # Save the results to the destination
-# TODO: Convert to niceload
 
 nice -n "${NICE}" rclone sync \
             "${destination}/" \
@@ -273,4 +276,5 @@ nice -n "${NICE}" rclone sync \
             --transfers "${OUTBOUND_TRANSFERS}" ||\
     report $? "save results"
 
+######################################################################
 cleanup 0
