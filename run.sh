@@ -53,6 +53,10 @@ log_setting "source for input data" "${input}"
 log_setting "destination for outputs" "${output}"
 log_setting "workspace" "${workspace}"
 log_setting "log destination" "${logspace}"
+log_setting "target system load" "${target_load}"
+# log_setting "decryption key" "$decrypt"
+log_setting "signing key" "$sign"
+log_setting "encryption key" "$encrypt"
 
 . ${run_path}/settings.sh
 . ${run_path}/cleanup.sh
@@ -75,6 +79,7 @@ function run {
     parallel_log_setting "workspace" "${work}"
     parallel_log_setting "log destination" "${logs}"
     parallel_log_setting "ramdisk space" "${ramdisk}"
+    parallel_log_setting "target system load" "${target_load}"
 
     parallel_check_exists "${work}"
     parallel_check_exists "${input}"
