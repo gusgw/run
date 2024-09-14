@@ -14,18 +14,17 @@ function cleanup_run {
     >&2 echo "---"
     >&2 echo "${STAMP}: exiting cleanly with code ${rc}. . ."
 
-    if [ "$clean" == "input" ] || [ "$clean" == "all" ]; then
+
+    if ! [ "$clean" == "keep" ]; then
         >&2 echo "${STAMP}: removing downloaded input files"
-        for f in ${destination}/${inglob}; do
+        for f in ${work}/${inglob}; do
             rm -f ${f} || report $? "remove input file ${f}"
         done
-    else
-        >&2 echo "${STAMP}: keeping downloaded input files"
     fi
 
-    if [ "$clean" == "output" ] || [ "$clean" == "all" ]; then
+    if [ "$clean" == "output" ] || [ "$clean" == "gpg" ] || [ "$clean" == "all" ]; then
         >&2 echo "${STAMP}: removing output files"
-        for f in "${destination}/${outglob}"; do
+        for f in "${work}/${outglob}"; do
             rm -f ${f} || report $? "remove raw output ${f}"
         done
     else
@@ -34,7 +33,7 @@ function cleanup_run {
 
     if [ "$clean" == "gpg" ] || [ "$clean" == "all" ]; then
         >&2 echo "${STAMP}: removing GPG files"
-        for gpg in "${destination}/${outglob}.gpg"; do
+        for gpg in "${work}/${outglob}.gpg"; do
             rm -f ${gpg} || report $? "remove signed and encrypted ${gpg}"
         done
     else
