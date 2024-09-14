@@ -9,9 +9,9 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
 
-WAIT=10.0
+export WAIT=5.0
 
-MAX_SUBPROCESSES=16
+MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
@@ -144,12 +144,15 @@ nice -n "${NICE}" rclone sync \
             --transfers "${INBOUND_TRANSFERS}" \
             --include "${inglob}" ||\
     report $? "download input data"
+print_rule
 
 ######################################################################
 # Run the job
 
+
 find "${work}" -name "${inglob}" |\
-    parallel --results "${logs}/run/{/}/" \
+    parallel --eta --tag --tagstring {} \
+             --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
@@ -169,12 +172,15 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
 done
+echo
+print_rule
 
 ######################################################################
 # Encrypt the results
 
 find "${work}" -name "${outglob}" |\
-    parallel --results "${logs}/gpg/{/}/" \
+    parallel --eta --tag --tagstring {} \
+             --results "${logs}/gpg/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.gpg.log" \
              --jobs "$MAX_SUBPROCESSES" \
         nice -n "${NICE}" gpg --output {}.gpg \
@@ -193,6 +199,8 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     free_memory_report "${job} gpg" \
                        "${logs}/${STAMP}.${job}.$$.free"
 done
+echo
+print_rule
 
 ######################################################################
 # Save the results to the 
