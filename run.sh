@@ -175,7 +175,6 @@ print_rule
 ######################################################################
 # Run the job
 
-
 find "${work}" -name "${inglob}" |\
     parallel --eta --tag --tagstring {} \
              --results "${logs}/run/{/}/" \
