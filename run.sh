@@ -15,29 +15,41 @@ MAX_SUBPROCESSES=16
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
-clean="$1"
-job="$2"
+clean="$1"      # What should be cleaned up in the workspace?
+job="$2"        # Give this run a name or number.
 
-iext="input"
-oext="output"
-
+# Specify inputs to fetch to workspace with rclone
 input="dummy:/mnt/data/chips/input"
+iext="input"
 inglob="*.${iext}"
-outglob="*.${oext}"
-workspace="/mnt/data/chips/work"
-workfactor=1.2
-logspace="/mnt/data/chips/log"
-output="dummy:/mnt/data/chips/output"
 
+# Specify outputs to get from workspace with rclone when done
+output="dummy:/mnt/data/chips/output"
+oext="output"
+outglob="*.${oext}"
+
+# Where is the working directory?
+workspace="/mnt/data/chips/work"
+
+# Estimate the size of files generated as a multiple of input size
+workfactor=1.2
+
+# Where should logs be stored?
+logspace="/mnt/data/chips/log"
+
+# Specify keys for decryption of inputs,
+# and for signing and encryption of outputs
 decrypt=""
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
 set_stamp
-log_setting "source for input data" "${input}"
-log_setting "workspace for data" "${workspace}"
+log_setting "cleanup when done" "${clean}"
 log_setting "job to process" "${job}"
+log_setting "source for input data" "${input}"
 log_setting "destination for outputs" "${output}"
+log_setting "workspace" "${workspace}"
+log_setting "log destination" "${logspace}"
 
 export RULE="***"
 
