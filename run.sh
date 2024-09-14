@@ -29,15 +29,15 @@ workfactor=1.2
 logspace="/mnt/data/chips/log"
 output="dummy:/mnt/data/chips/output"
 
+decrypt=""
+sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
+encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+
 set_stamp
 log_setting "source for input data" "${input}"
 log_setting "workspace for data" "${workspace}"
 log_setting "job to process" "${job}"
 log_setting "destination for outputs" "${output}"
-
-decrypt=""
-sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
-encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
 export RULE="***"
 
