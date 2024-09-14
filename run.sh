@@ -69,7 +69,7 @@ function cleanup_run {
     chmod u+w "$status"
 
     while read pid; do
-        while kill -0 "$pid" 2> /dev/null; do
+        while kill -0 "${pid%% *}" 2> /dev/null; do
             >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
             kill $pid || report $? "killing $pid"
             sleep ${WAIT}
@@ -108,7 +108,7 @@ function run {
     # File to work on
     local input="$5"
 
-    echo "$PARALLEL_PID" >> "${ramdisk}/workers"
+    echo "$PARALLEL_PID parallel pid" >> "${ramdisk}/workers"
 
     parallel_log_setting "workspace" "${workspace}"
     parallel_log_setting "job for parallel worker" "${job}"
@@ -132,11 +132,12 @@ function run {
                            --cpu 4 &
     stressid=$!
     # TODO check $stressid is still running
-    echo "${stressid}" >> "${ramdisk}/workers"
+    echo "${stressid} main job" >> "${ramdisk}/workers"
     niceload -v --load 4.1 -p ${stressid} &
     for kid in $(kids ${stressid}); do
-        echo "${kid}" >> "${ramdisk}/workers"
+        echo "${kid} child job" >> "${ramdisk}/workers"
         niceload -v --load 4.1 -p ${kid} &
+        parallel_log_setting "a process under load control" "${kid}"
     done
     # wait $stressid || parallel_report $? "working"
     sleep 120
