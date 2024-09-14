@@ -116,19 +116,19 @@ function run {
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
         for k in {1..3}; do 
+            sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
                            "${target_load}"
-            sleep ${WAIT};
         done
     #---END---------
     else
     #---REAL-CODE---
         while kill -0 "${mainid}" 2> /dev/null; do
+            sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
                            "${target_load}"
-            sleep ${WAIT};
         done
     #---END---------
     fi
