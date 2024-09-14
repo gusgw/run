@@ -125,12 +125,12 @@ export parallel_cleanup_function="parallel_cleanup_run"
 function parallel_cleanup_run {
     local rc=$1
     >&2 echo "---"
-    >&2 echo "${STAMP} ${PARALLEL_PID} \
-                       ${PARALLEL_JOBSLOT} \
-                       ${PARALLEL_SEQ}: exiting run cleanly with code ${rc}. . ."
-    >&2 echo "${STAMP} ${PARALLEL_PID} \
-                       ${PARALLEL_JOBSLOT} \
-                       ${PARALLEL_SEQ}: . . . all done with code ${rc}"
+    >&2 echo "${STAMP}" "${PARALLEL_PID}" \
+                        "${PARALLEL_JOBSLOT}" \
+                        "${PARALLEL_SEQ}: exiting run cleanly with code ${rc}. . ."
+    >&2 echo "${STAMP}" "${PARALLEL_PID}" \
+                        "${PARALLEL_JOBSLOT}" \
+                        "${PARALLEL_SEQ}: . . . all done with code ${rc}"
 
     whoami="$$.${PARALLEL_PID}.${PARALLEL_JOBSLOT}.${PARALLEL_SEQ}"
     local status="${logs}/status/${whoami}.${STAMP}.parallel_cleanup.status"
