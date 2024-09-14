@@ -9,7 +9,7 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
 
-WAIT=5.0
+WAIT=10.0
 
 MAX_SUBPROCESSES=16
 INBOUND_TRANSFERS=8
