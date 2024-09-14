@@ -109,7 +109,7 @@ function run {
     # wait $mainid || parallel_report $? "working"
 
     #---TEST CODE---
-    sleep 120
+    sleep 240
     #---END  TEST---
 
     kill $mainid || parallel_report $? "ending ${job}"
