@@ -15,6 +15,42 @@ MAX_SUBPROCESSES=16
 INBOUND_TRANSFERS=8
 OUTBOUND_TRANSFERS=8
 
+clean="$1"      # What should be cleaned up in the workspace?
+job="$2"        # Give this run a name or number.
+
+# Specify inputs to fetch to workspace with rclone
+input="dummy:/mnt/data/chips/input"
+iext="input"
+inglob="*.${iext}"
+
+# Specify outputs to get from workspace with rclone when done
+output="dummy:/mnt/data/chips/output"
+oext="output"
+outglob="*.${oext}"
+
+# Where is the working directory?
+workspace="/mnt/data/chips/work"
+
+# Estimate the size of files generated as a multiple of input size
+workfactor=1.2
+
+# Where should logs be stored?
+logspace="/mnt/data/chips/log"
+
+# Specify keys for decryption of inputs,
+# and for signing and encryption of outputs
+decrypt=""
+sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
+encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+
+set_stamp
+log_setting "cleanup when done" "${clean}"
+log_setting "job to process" "${job}"
+log_setting "source for input data" "${input}"
+log_setting "destination for outputs" "${output}"
+log_setting "workspace" "${workspace}"
+log_setting "log destination" "${logspace}"
+
 export RULE="***"
 
 export NICE=19
@@ -69,7 +105,7 @@ function cleanup_run {
     chmod u+w "$status"
 
     while read pid; do
-        while kill -0 "$pid" 2> /dev/null; do
+        while kill -0 "${pid%% *}" 2> /dev/null; do
             >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
             kill $pid || report $? "killing $pid"
             sleep ${WAIT}
@@ -108,17 +144,22 @@ function run {
     # File to work on
     local input="$5"
 
-    echo "$PARALLEL_PID" >> "${ramdisk}/workers"
+    echo "$PARALLEL_PID parallel pid" >> "${ramdisk}/workers"
 
     parallel_log_setting "workspace" "${workspace}"
+    parallel_log_setting "log destination" "${logs}"
+    parallel_log_setting "ramdisk space" "${ramdisk}"
     parallel_log_setting "job for parallel worker" "${job}"
     parallel_log_setting "file to work on" "${input}"
 
     parallel_check_exists "${workspace}"
     parallel_check_exists "${input}"
 
+    inputname=$(basename ${input})
+    outname=${inputname/\.input/\.${job}\.output}
+
     destination="${workspace}/${job}"
-    parallel_log_setting "destination for results" "$destination"
+    parallel_log_setting "working directory" "$destination"
     mkdir -p "${destination}" ||\
         parallel_report "$?" "make folder if necessary"
     parallel_check_exists "${destination}"
@@ -129,50 +170,27 @@ function run {
                            --cpu 4 &
     stressid=$!
     # TODO check $stressid is still running
-    echo "${stressid}" >> "${ramdisk}/workers"
+    echo "${stressid} main job" >> "${ramdisk}/workers"
     niceload -v --load 4.1 -p ${stressid} &
+    sleep 10
     for kid in $(kids ${stressid}); do
-        echo "${kid}" >> "${ramdisk}/workers"
+        echo "${kid} child job" >> "${ramdisk}/workers"
         niceload -v --load 4.1 -p ${kid} &
+        parallel_log_setting "a process under load control" "${kid}"
     done
     # wait $stressid || parallel_report $? "working"
     sleep 120
     kill $stressid || parallel_report $? "ending ${job}"
 
-    dd if=/dev/random of="${destination}/chips.output" bs=1G count=1
+    dd if=/dev/random of="${destination}/${outname}" bs=1G count=1
 
     parallel_cleanup 0
     return 0
 }
 export -f run
 
-set_stamp
-
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
-
-clean="$1"
-job="$2"
-
-iext="input"
-oext="output"
-
-input="dummy:/mnt/data/chips0/input"
-inglob="*.${iext}"
-outglob="*.${oext}"
-workspace="/mnt/data/chips0/work"
-workfactor=1.2
-logspace="/mnt/data/chips0/log"
-output="dummy:/mnt/data/chips0/output"
-
-log_setting "source for input data" "${input}"
-log_setting "workspace for data" "${workspace}"
-log_setting "job to process" "${job}"
-log_setting "destination for outputs" "${output}"
-
-decrypt=""
-sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
-encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
 # log_setting "decryption key" "$decrypt"
 log_setting "signing key" "$sign"
