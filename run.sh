@@ -100,7 +100,7 @@ function cleanup_run {
 
     >&2 echo "${STAMP}: checking for child processes"
 
-    local status="${STAMP}.cleanup.status"
+    local status="${logs}/status/$$.${STAMP}.cleanup.status"
     cp "/proc/$$/status" "$status"
     chmod u+w "$status"
 
@@ -125,8 +125,19 @@ parallel_cleanup_functions+=('parallel_cleanup_run')
 function parallel_cleanup_run {
     local rc=$1
     >&2 echo "---"
-    >&2 echo "${STAMP} ${PARALLEL_PID}: exiting cleanly with code ${rc}. . ."
-    >&2 echo "${STAMP} ${PARALLEL_PID}: . . . all done with code ${rc}"
+    >&2 echo "${STAMP} ${PARALLEL_PID} \
+                       ${PARALLEL_JOBSLOT} \
+                       ${PARALLEL_SEQ}: exiting cleanly with code ${rc}. . ."
+    >&2 echo "${STAMP} ${PARALLEL_PID} \
+                       ${PARALLEL_JOBSLOT} \
+                       ${PARALLEL_SEQ}: . . . all done with code ${rc}"
+
+    whoami="$$.${PARALLEL_PID}.${PARALLEL_JOBSLOT}.${PARALLEL_SEQ}"
+    local status="${logs}/status/${whoami}.${STAMP}.parallel_cleanup.status"
+    cp "/proc/$$/status" "$status"
+    chmod u+w "$status"
+
+    return $rc
 }
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
@@ -142,15 +153,15 @@ function run {
     # File to work on
     local input="$5"
 
-
+    parallel_log_setting "job" "${job}"
+    parallel_log_setting "file to work on" "${input}"
     parallel_log_setting "workspace" "${workspace}"
     parallel_log_setting "log destination" "${logs}"
     parallel_log_setting "ramdisk space" "${ramdisk}"
-    parallel_log_setting "job for parallel worker" "${job}"
-    parallel_log_setting "file to work on" "${input}"
 
     parallel_check_exists "${workspace}"
     parallel_check_exists "${input}"
+    parallel_check_exists "${ramdisk}"
 
     #---TEST CODE---
     inputname=$(basename ${input})
@@ -209,6 +220,8 @@ mkdir -p "${destination}" || report $? "create workspace for $job"
 logs="${logspace}/${job}"
 log_setting "log subfolder for this job" "${logs}"
 mkdir -p "${logs}" || report $? "create log folder for $job"
+mkdir -p "${logs}/status" || report $? "create status folder for $job"
+
 ramdisk="/dev/shm/${job}/$$/"
 log_setting "ramdisk space for this job" "${ramdisk}"
 mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
