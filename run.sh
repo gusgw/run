@@ -139,6 +139,7 @@ function parallel_cleanup_run {
 
     return $rc
 }
+export -f parallel_cleanup_run
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
 function run {
