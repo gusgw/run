@@ -51,100 +51,13 @@ log_setting "destination for outputs" "${output}"
 log_setting "workspace" "${workspace}"
 log_setting "log destination" "${logspace}"
 
-export RULE="***"
-
-export NICE=19
-
-cleanup_functions+=('cleanup_run')
-
-function cleanup_run {
-
-    ######################################
-    # If using the report function here, #
-    # make sure it has NO THIRD ARGUMENT #
-    # or there will be an infinite loop! #
-    # This function may be used to       #
-    # handle trapped signals             #
-    ######################################
-
-    local rc=$1
-    >&2 echo "---"
-    >&2 echo "${STAMP}: exiting cleanly with code ${rc}. . ."
-
-    if [ "$clean" == "input" ] || [ "$clean" == "all" ]; then
-        >&2 echo "${STAMP}: removing downloaded input files"
-        for f in ${destination}/${inglob}; do
-            rm -f ${f} || report $? "remove input file ${f}"
-        done
-    else
-        >&2 echo "${STAMP}: keeping downloaded input files"
-    fi
-
-    if [ "$clean" == "output" ] || [ "$clean" == "all" ]; then
-        >&2 echo "${STAMP}: removing output files"
-        for f in "${destination}/${outglob}"; do
-            rm -f ${f} || report $? "remove raw output ${f}"
-        done
-    else
-        >&2 echo "${STAMP}: keeping output files"
-    fi
-
-    if [ "$clean" == "gpg" ] || [ "$clean" == "all" ]; then
-        >&2 echo "${STAMP}: removing GPG files"
-        for gpg in "${destination}/${outglob}.gpg"; do
-            rm -f ${gpg} || report $? "remove signed and encrypted ${gpg}"
-        done
-    else
-        >&2 echo "${STAMP}: keeping GPG files"
-    fi
-
-    >&2 echo "${STAMP}: checking for child processes"
-
-    local status="${logs}/status/$$.${STAMP}.cleanup.status"
-    cp "/proc/$$/status" "$status"
-    chmod u+w "$status"
-
-    while read pid; do
-        while kill -0 "${pid%% *}" 2> /dev/null; do
-            >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
-            kill $pid || report $? "killing $pid"
-            sleep ${WAIT}
-        done
-    done < $ramdisk/workers
-
-    rm $ramdisk/workers
-    rm -rf $ramdisk
-
-    >&2 echo "${STAMP}: . . . all done with code ${rc}"
-    >&2 echo "---"
-    exit $rc
-}
-
-export parallel_cleanup_function="parallel_cleanup_run"
-
-function parallel_cleanup_run {
-    local rc=$1
-    >&2 echo "---"
-    >&2 echo "${STAMP}" "${PARALLEL_PID}" \
-                        "${PARALLEL_JOBSLOT}" \
-                        "${PARALLEL_SEQ}: exiting run cleanly with code ${rc}. . ."
-    >&2 echo "${STAMP}" "${PARALLEL_PID}" \
-                        "${PARALLEL_JOBSLOT}" \
-                        "${PARALLEL_SEQ}: . . . all done with code ${rc}"
-
-    whoami="$$.${PARALLEL_PID}.${PARALLEL_JOBSLOT}.${PARALLEL_SEQ}"
-    local status="${logs}/status/${whoami}.${STAMP}.parallel_cleanup.status"
-    cp "/proc/$$/status" "$status"
-    chmod u+w "$status"
-
-    return $rc
-}
-export -f parallel_cleanup_run
+. ${run_path}/settings.sh
+. ${run_path}/cleanup.sh
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
 function run {
     # The workspace is the top level folder
-    local workspace="$1"
+    local work="$1"
     # Location for logs
     local logs="$2"
     # Ramdisk
@@ -156,11 +69,11 @@ function run {
 
     parallel_log_setting "job" "${job}"
     parallel_log_setting "file to work on" "${input}"
-    parallel_log_setting "workspace" "${workspace}"
+    parallel_log_setting "workspace" "${work}"
     parallel_log_setting "log destination" "${logs}"
     parallel_log_setting "ramdisk space" "${ramdisk}"
 
-    parallel_check_exists "${workspace}"
+    parallel_check_exists "${work}"
     parallel_check_exists "${input}"
     parallel_check_exists "${ramdisk}"
 
@@ -169,11 +82,10 @@ function run {
     outname=${inputname/\.input/\.${job}\.output}
     #---END  TEST---
 
-    destination="${workspace}/${job}"
-    parallel_log_setting "working directory" "$destination"
-    mkdir -p "${destination}" ||\
+    parallel_log_setting "working directory" "$work"
+    mkdir -p "${work}" ||\
         parallel_report "$?" "make folder if necessary"
-    parallel_check_exists "${destination}"
+    parallel_check_exists "${work}"
 
     #---TEST CODE---
     # TODO Spawn the process then periodically save its resource
@@ -200,7 +112,7 @@ function run {
     kill $mainid || parallel_report $? "ending ${job}"
 
     #---TEST CODE---
-    dd if=/dev/random of="${destination}/${outname}" bs=1G count=1
+    dd if=/dev/random of="${work}/${outname}" bs=1G count=1
     #---END  TEST---
 
     parallel_cleanup 0
@@ -211,37 +123,12 @@ export -f run
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
 
-# log_setting "decryption key" "$decrypt"
-log_setting "signing key" "$sign"
-log_setting "encryption key" "$encrypt"
-
-######################################################################
-destination="${workspace}/${job}"
-log_setting "workspace subfolder for this job" "${destination}"
-mkdir -p "${destination}" || report $? "create workspace for $job"
-
-logs="${logspace}/${job}"
-log_setting "log subfolder for this job" "${logs}"
-mkdir -p "${logs}" || report $? "create log folder for $job"
-mkdir -p "${logs}/status" || report $? "create status folder for $job"
-
-ramdisk="/dev/shm/${job}/$$/"
-log_setting "ramdisk space for this job" "${ramdisk}"
-mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
-
-insize=$(nice -n "${NICE}" rclone lsl "${input}/" \
-                                      --include "${inglob}" |\
-                           awk '{sum+=$1} END {print sum;}')
-log_setting "size of inputs" "${insize}"
-worksize=$(echo ${insize}*${workfactor}+1 | bc -l | sed 's/\([0-9]*\)\..*$/\1/')
-log_setting "size needed for workspace" "${worksize}"
-
 ######################################################################
 # Get the input data
 
 nice -n "${NICE}" rclone sync \
             "${input}/" \
-            "${destination}/" \
+            "${work}/" \
             --config "${run_path}/rclone.conf" \
             --progress \
             --log-level INFO \
@@ -253,7 +140,7 @@ nice -n "${NICE}" rclone sync \
 ######################################################################
 # Run the job
 
-find "${destination}" -name "${inglob}" |\
+find "${work}" -name "${inglob}" |\
     parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
@@ -262,7 +149,7 @@ find "${destination}" -name "${inglob}" |\
 ######################################################################
 # Encrypt the results
 
-find "${destination}" -name "${outglob}" |\
+find "${work}" -name "${outglob}" |\
     parallel --results "${logs}/gpg/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.gpg.log" \
              --jobs "$MAX_SUBPROCESSES" \
@@ -277,11 +164,11 @@ find "${destination}" -name "${outglob}" |\
                               --encrypt --recipient "$encrypt" {}
 
 ######################################################################
-# Save the results to the destination
+# Save the results to the 
 
 nice -n "${NICE}" rclone sync \
-            "${destination}/" \
-            "${output}" \
+            "${work}/" \
+            "${output}/" \
             --config "${run_path}/rclone.conf" \
             --progress \
             --log-level INFO \
