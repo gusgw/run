@@ -46,6 +46,10 @@ decrypt=""
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
+# Run type should be test if we're using a dummy
+# job to test the script
+export run_type="test"
+
 set_stamp
 log_setting "cleanup when done" "${clean}"
 log_setting "job to process" "${job}"
@@ -85,43 +89,65 @@ function run {
     parallel_check_exists "${input}"
     parallel_check_exists "${ramdisk}"
 
-    #---TEST CODE---
-    inputname=$(basename ${input})
-    outname=${inputname/\.input/\.${job}\.output}
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        inputname=$(basename ${input})
+        outname=${inputname/\.input/\.${job}\.output}
+    #---END---------
+    fi
 
     parallel_log_setting "working directory" "$work"
     mkdir -p "${work}" ||\
         parallel_report "$?" "make folder if necessary"
     parallel_check_exists "${work}"
 
-    #---TEST CODE---
-    # TODO Spawn the process then periodically save its resource
-    # TODO usage then report its exit code.
-    nice -n "$NICE" stress --verbose --cpu 2 &
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        nice -n "$NICE" stress --verbose --cpu 2 &
+        mainid=$!
+    #---END---------
+    else
+    #---REAL CODE---
+        echo "working"
+        mainid=$!
+    #---END---------
+    fi
 
-    mainid=$!
-    # TODO check $stressid is still running
-    echo "${mainid} main job" >> "${ramdisk}/workers"
-    niceload -v --load "${target_load}" -p "${mainid}" &
-    sleep 10
-    for kid in $(kids ${mainid}); do
-        echo "${kid} child job" >> "${ramdisk}/workers"
-        niceload -v --load "${target_load}" -p "${kid}" &
-        parallel_log_setting "a process under load control" "${kid}"
-    done
-    # wait $mainid || parallel_report $? "working"
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        for k in {1..3}; do 
+            apply_niceload "${mainid}" \
+                           "${ramdisk}/workers" \
+                           "${target_load}"
+            sleep ${WAIT};
+        done
+    #---END---------
+    else
+    #---REAL-CODE---
+        while kill -0 "${mainid}" 2> /dev/null; do
+            apply_niceload "${mainid}" \
+                           "${ramdisk}/workers" \
+                           "${target_load}"
+            sleep ${WAIT};
+        done
+    #---END---------
+    fi
 
-    #---TEST CODE---
-    sleep 240
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        kill $mainid || parallel_report $? "ending test ${job}"
+    #---END---------
+    else
+    #---REAL-CODE---
+        wait $mainid || parallel_report $? "working"
+    #---END---------
+    fi
 
-    kill $mainid || parallel_report $? "ending ${job}"
-
-    #---TEST CODE---
-    dd if=/dev/random of="${work}/${outname}" bs=1G count=1
-    #---END  TEST---
+    if [[ "$run_type" == "test" ]]; then
+    #---TEST-CODE---
+        dd if=/dev/random of="${work}/${outname}" bs=1G count=1
+    #---END---------
+    fi
 
     parallel_cleanup 0
     return 0
