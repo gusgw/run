@@ -205,7 +205,7 @@ print_rule
 ######################################################################
 # Save the results to the 
 
-nice -n "${NICE}" rclone sync \
+nice -n "${NICE}" rclone copy \
             "${work}/" \
             "${output}/" \
             --config "${run_path}/rclone.conf" \
