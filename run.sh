@@ -113,7 +113,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..3}; do 
+        for k in {1..3}; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
