@@ -4,6 +4,10 @@ key=$1
 deploy=$2
 ip=$3
 
+while ! ssh  -i "~/.ssh/${key}" "admin@${ip}" which git; do
+    sleep 5
+done
+
 ssh -i "~/.ssh/${key}" "admin@${ip}" << ENDSSH
 rm -rf ~/.ssh/${deploy}
 rm -rf ~/.ssh/config
