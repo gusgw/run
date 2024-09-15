@@ -19,6 +19,7 @@ Host github
     Port            22
     IdentityFile    ~/.ssh/id_ed25519-tobermory-github_deploy
 EOF
+ssh-keyscan -H [hostname] >> ~/.ssh/known_hosts
 mkdir -p ~/src/
 cd ~/src/
 rm -rf run
