@@ -20,10 +20,15 @@ Host github
     IdentityFile    ~/.ssh/id_ed25519-tobermory-github_deploy
 EOF
 ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
 mkdir -p ~/src/
 cd ~/src/
 rm -rf run
 git clone -b develop github:gusgw/run.git 1> ~/git.clone.out 2> ~/git.clone.err
 cd run
 git submodule update --init --recursive 1> ~/git.sub.out 2> ~/git.sub.err
+
+sudo mkfs.ext4 /dev/nvme1n1
+sudo mkdir -p /mnt/data
+sudo mount /dev/nvme1n1 /mnt/data
 ENDSSH
