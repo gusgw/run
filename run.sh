@@ -49,6 +49,8 @@ encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 # Run type should be test if we're using a dummy
 # job to test the script
 export run_type="test"
+export stress_cpus=2
+export output_size="1M"
 
 # Check commands are available
 check_dependency rclone
@@ -109,7 +111,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        nice -n "$NICE" stress --verbose --cpu 2 &
+        nice -n "$NICE" stress --verbose --cpu "${stress_cpus}" &
         mainid=$!
     #---END---------
     else
@@ -151,7 +153,10 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        dd if=/dev/random of="${work}/${outname}" bs=1G count=1
+        dd if=/dev/random \
+           of="${work}/${outname}" \
+           bs="${output_size}" \
+           count=1
     #---END---------
     fi
 
