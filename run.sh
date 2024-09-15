@@ -42,7 +42,6 @@ export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-decrypt=""
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
@@ -58,7 +57,6 @@ log_setting "destination for outputs" "${output}"
 log_setting "workspace" "${workspace}"
 log_setting "log destination" "${logspace}"
 log_setting "target system load" "${target_load}"
-# log_setting "decryption key" "$decrypt"
 log_setting "signing key" "$sign"
 log_setting "encryption key" "$encrypt"
 
@@ -115,7 +113,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..3}; do 
+        for k in {1..3}; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
@@ -168,9 +166,46 @@ nice -n "${NICE}" rclone sync \
             --log-level INFO \
             --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
             --transfers "${INBOUND_TRANSFERS}" \
+            --include "${inglob}.gpg" ||\
+    report $? "download input data"
+print_rule
+nice -n "${NICE}" rclone sync \
+            "${input}/" \
+            "${work}/" \
+            --config "${run_path}/rclone.conf" \
+            --progress \
+            --log-level INFO \
+            --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
+            --transfers "${INBOUND_TRANSFERS}" \
             --include "${inglob}" ||\
     report $? "download input data"
 print_rule
+
+######################################################################
+# Decrypt inputs if necessary
+
+find "${work}" -name "${inglob}.gpg" |\
+    parallel --eta --tag --tagstring {.} \
+             --results "${logs}/gpg/input/{/}/" \
+             --joblog "${logs}/${STAMP}.${job}.gpg.input.log" \
+             --jobs "$MAX_SUBPROCESSES" \
+        nice -n "${NICE}" gpg --output {.} \
+                              --compress-algo 0 \
+                              --batch \
+                              --yes \
+                              --with-colons \
+                              --always-trust \
+                              --lock-multiple {} &
+parallel_pid=$!
+while kill -0 "$parallel_pid" 2> /dev/null; do
+    sleep ${WAIT}
+    load_report "${job} decrypt"  "${logs}/${STAMP}.${job}.$$.load"
+    free_memory_report "${job} gpg" \
+                       "${logs}/${STAMP}.${job}.$$.free"
+done
+echo
+print_rule
+
 
 ######################################################################
 # Run the job
@@ -205,8 +240,8 @@ print_rule
 
 find "${work}" -name "${outglob}" |\
     parallel --eta --tag --tagstring {} \
-             --results "${logs}/gpg/{/}/" \
-             --joblog "${logs}/${STAMP}.${job}.gpg.log" \
+             --results "${logs}/gpg/output/{/}/" \
+             --joblog "${logs}/${STAMP}.${job}.gpg.output.log" \
              --jobs "$MAX_SUBPROCESSES" \
         nice -n "${NICE}" gpg --output {}.gpg \
                               --compress-algo 0 \
@@ -220,7 +255,7 @@ find "${work}" -name "${outglob}" |\
 parallel_pid=$!
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
-    load_report "${job} gpg"  "${logs}/${STAMP}.${job}.$$.load"
+    load_report "${job} encrypt"  "${logs}/${STAMP}.${job}.$$.load"
     free_memory_report "${job} gpg" \
                        "${logs}/${STAMP}.${job}.$$.free"
 done

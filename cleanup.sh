@@ -17,6 +17,9 @@ function cleanup_run {
 
     if ! [ "$clean" == "keep" ]; then
         >&2 echo "${STAMP}: removing downloaded input files"
+        for f in ${work}/${inglob}.gpg; do
+            rm -f ${f} || report $? "remove input file ${f}"
+        done
         for f in ${work}/${inglob}; do
             rm -f ${f} || report $? "remove input file ${f}"
         done
