@@ -57,6 +57,16 @@ function cleanup_run {
         done
     done < $ramdisk/workers
 
+    local log_archive="${work}/${STAMP}.${job}.$$.logs.tar.xz"
+    tar Jcvf "${log_archive}" "${logs}/"
+    rclone copy "${log_archive}" \
+                "${output}/" \
+                --config "${run_path}/rclone.conf" \
+                --progress \
+                --log-level INFO \
+                --transfers "${OUTBOUND_TRANSFERS}" ||\
+        report $? "sending logs to output folder"
+
     rm $ramdisk/workers
     rm -rf $ramdisk
 
