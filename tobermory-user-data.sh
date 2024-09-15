@@ -1,8 +1,11 @@
 #! /bin/bash
 
-apt -y update 1> ~/apt.update.out 2> ~/apt.update.err
-apt -y upgrade 1> ~/apt.upgrade.out 2> ~/apt.upgrade.err
+rm -rf /etc/update-motd.d/10-uname
+rm -rf /etc/motd
+
+apt -y update 1> /root/apt.update.out 2> /root/apt.update.err
+apt -y upgrade 1> /root/apt.upgrade.out 2> /root/apt.upgrade.err
 
 for pkg in git bc gnupg2 rclone parallel; do
-    apt -y install "${pkg}" 1> "~/apt.${pkg}.out" 2> "~/apt.${pkg}.err"
+    apt -y install ${pkg} 1> /root/apt.${pkg}.out 2> /root/apt.${pkg}.err
 done
