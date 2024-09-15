@@ -42,6 +42,7 @@ export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
+encrypt_outputs="no"
 sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
 encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 
@@ -155,57 +156,18 @@ export -f run
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
 
+# Load routines for fetching inputs and sending outputs
+. ${run_path}/io.sh
+
 ######################################################################
 # Get the input data
 
-nice -n "${NICE}" rclone sync \
-            "${input}/" \
-            "${work}/" \
-            --config "${run_path}/rclone.conf" \
-            --progress \
-            --log-level INFO \
-            --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
-            --transfers "${INBOUND_TRANSFERS}" \
-            --include "${inglob}.gpg" ||\
-    report $? "download input data"
-print_rule
-nice -n "${NICE}" rclone sync \
-            "${input}/" \
-            "${work}/" \
-            --config "${run_path}/rclone.conf" \
-            --progress \
-            --log-level INFO \
-            --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
-            --transfers "${INBOUND_TRANSFERS}" \
-            --include "${inglob}" ||\
-    report $? "download input data"
-print_rule
+get_inputs
 
 ######################################################################
 # Decrypt inputs if necessary
 
-find "${work}" -name "${inglob}.gpg" |\
-    parallel --eta --tag --tagstring {.} \
-             --results "${logs}/gpg/input/{/}/" \
-             --joblog "${logs}/${STAMP}.${job}.gpg.input.log" \
-             --jobs "$MAX_SUBPROCESSES" \
-        nice -n "${NICE}" gpg --output {.} \
-                              --compress-algo 0 \
-                              --batch \
-                              --yes \
-                              --with-colons \
-                              --always-trust \
-                              --lock-multiple {} &
-parallel_pid=$!
-while kill -0 "$parallel_pid" 2> /dev/null; do
-    sleep ${WAIT}
-    load_report "${job} decrypt"  "${logs}/${STAMP}.${job}.$$.load"
-    free_memory_report "${job} gpg" \
-                       "${logs}/${STAMP}.${job}.$$.free"
-done
-echo
-print_rule
-
+decrypt_inputs
 
 ######################################################################
 # Run the job
@@ -238,43 +200,14 @@ print_rule
 ######################################################################
 # Encrypt the results
 
-find "${work}" -name "${outglob}" |\
-    parallel --eta --tag --tagstring {} \
-             --results "${logs}/gpg/output/{/}/" \
-             --joblog "${logs}/${STAMP}.${job}.gpg.output.log" \
-             --jobs "$MAX_SUBPROCESSES" \
-        nice -n "${NICE}" gpg --output {}.gpg \
-                              --compress-algo 0 \
-                              --batch \
-                              --yes \
-                              --with-colons \
-                              --always-trust \
-                              --lock-multiple \
-                              --sign --local-user "$sign" \
-                              --encrypt --recipient "$encrypt" {} &
-parallel_pid=$!
-while kill -0 "$parallel_pid" 2> /dev/null; do
-    sleep ${WAIT}
-    load_report "${job} encrypt"  "${logs}/${STAMP}.${job}.$$.load"
-    free_memory_report "${job} gpg" \
-                       "${logs}/${STAMP}.${job}.$$.free"
-done
-echo
-print_rule
+if [ "${encrypt_outputs}" == "yes" ]; then
+    encrypt_outputs
+fi
 
 ######################################################################
-# Save the results to the 
+# Save the results to the output destination
 
-nice -n "${NICE}" rclone copy \
-            "${work}/" \
-            "${output}/" \
-            --config "${run_path}/rclone.conf" \
-            --progress \
-            --log-level INFO \
-            --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
-            --include "${outglob}.gpg" \
-            --transfers "${OUTBOUND_TRANSFERS}" ||\
-    report $? "save results"
+send_outputs
 
 ######################################################################
 cleanup 0
