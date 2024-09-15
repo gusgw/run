@@ -50,6 +50,13 @@ encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 # job to test the script
 export run_type="test"
 
+# Check commands are available
+check_dependency rclone
+check_dependency gpg
+check_dependency bc
+check_dependency parallel
+check_dependency niceload
+
 set_stamp
 log_setting "cleanup when done" "${clean}"
 log_setting "job to process" "${job}"
