@@ -50,7 +50,7 @@ encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
 # job to test the script
 export run_type="test"
 export stress_cpus=2
-export output_size="1M"
+export output_size="1G"
 
 # Check commands are available
 check_dependency rclone
