@@ -67,6 +67,18 @@ function cleanup_run {
                 --transfers "${OUTBOUND_TRANSFERS}" ||\
         report $? "sending logs to output folder"
 
+    if [ "$clean" == "all" ]; then
+        rm -rf ${work} || report $? "removing work folder"
+    else
+        >&2 echo "${STAMP}: keeping work folder"
+    fi
+
+    if [ "$clean" == "all" ]; then
+        rm -rf ${logs} || report $? "removing log folder"
+    else
+        >&2 echo "${STAMP}: keeping log folder"
+    fi
+
     rm $ramdisk/workers
     rm -rf $ramdisk
 
