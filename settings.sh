@@ -11,7 +11,7 @@ log_setting "log subfolder for this job" "${logs}"
 mkdir -p "${logs}" || report $? "create log folder for $job"
 mkdir -p "${logs}/status" || report $? "create status folder for $job"
 
-ramdisk="/dev/shm/${job}/$$"
+ramdisk="/dev/shm/${job}-$$"
 log_setting "ramdisk space for this job" "${ramdisk}"
 mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
 
