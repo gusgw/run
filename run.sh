@@ -52,6 +52,8 @@ export run_type="test"
 export stress_cpus=2
 export output_size="1G"
 
+set_stamp
+
 # Check commands are available
 check_dependency rclone
 check_dependency gpg
@@ -59,7 +61,7 @@ check_dependency bc
 check_dependency parallel
 check_dependency niceload
 
-set_stamp
+# Report settings
 log_setting "cleanup when done" "${clean}"
 log_setting "job to process" "${job}"
 log_setting "source for input data" "${input}"
