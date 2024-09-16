@@ -3,19 +3,28 @@
 key=$1
 ip=$2
 deploy=$3
-asc=$4
+rclone=$4
+asc=$5
 
-while ! ssh  -i "~/.ssh/${key}" "admin@${ip}" which git; do
+SSHCMD="ssh -i ~/.ssh/${key}" 
+SCPCMD="scp -i ~/.ssh/${key}"
+WORKER="admin@${ip}"
+
+while ! "${SSHCMD}" "${WORKER}" which git; do
     sleep 5
 done
 
-ssh -i "~/.ssh/${key}" "admin@${ip}" << ENDSSH
+"${SSHCMD}" "${WORKER}" << ENDSSH
 rm -rf ~/.ssh/${deploy}
 rm -rf ~/.ssh/config
+rm -rf ~/.gnupg
 ENDSSH
-scp -i ~/.ssh/${key} ~/.ssh/${deploy} admin@${ip}:~/.ssh/
 
-ssh -i "~/.ssh/${key}" "admin@${ip}" << ENDSSH
+"${SCPCMD}" ~/.ssh/${deploy} "${WORKER}:~/.ssh/"
+"${SCPCMD}" ${asc}/*.asc "${WORKER}:~/"
+"${SCPCMD}" ${rclone} "${WORKER}:~/"
+
+"${SSHCMD}" "${WORKER}" << ENDSSH
     chmod og-rw ~/.ssh/${deploy}
     cat > ~/.ssh/config << EOF
         Host github
@@ -32,6 +41,12 @@ ssh -i "~/.ssh/${key}" "admin@${ip}" << ENDSSH
     git clone -b develop github:gusgw/run.git 1> ~/git.clone.out 2> ~/git.clone.err
     cd run
     git submodule update --init --recursive 1> ~/git.sub.out 2> ~/git.sub.err
+
+    rm rclone.conf
+    ln -s ~/${rclone} rclone.conf
+
+    cd
+    gpg --import *.asc
 
     sudo mkfs.ext4 /dev/nvme1n1
     sudo mkdir -p /mnt/data
