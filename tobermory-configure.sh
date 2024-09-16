@@ -35,4 +35,5 @@ git submodule update --init --recursive 1> ~/git.sub.out 2> ~/git.sub.err
 sudo mkfs.ext4 /dev/nvme1n1
 sudo mkdir -p /mnt/data
 sudo mount /dev/nvme1n1 /mnt/data
+    sudo chown admin /mnt/data
 ENDSSH
