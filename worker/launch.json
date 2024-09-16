@@ -3,16 +3,29 @@
   "MinCount": 1,
   "ImageId": "ami-00902d02d7a700776",
   "InstanceType": "t3.xlarge",
+  "InstanceInitiatedShutdownBehavior": "terminate",
   "KeyName": "tobermory-2-key-0",
-  "DisableApiTermination": true,
+  "DisableApiTermination": false,
   "EbsOptimized": true,
-  "UserData": "IyEgL2Jpbi9iYXNoCgphcHQgLXkgdXBkYXRlIDE+IH4vYXB0LnVwZGF0ZS5vdXQgMj4gfi9hcHQudXBkYXRlLmVycgphcHQgLXkgdXBncmFkZSAxPiB+L2FwdC51cGdyYWRlLm91dCAyPiB+L2FwdC51cGdyYWRlLmVycgoKc3UgYWRtaW4KCm1rZGlyIC1wIH4vLnNzaApjYXQgPiB+Ly5zc2gvaWRfZWQyNTUxOS10b2Jlcm1vcnktZ2l0aHViX2RlcGxveSA8PCBFT0YKLS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNDUWxhSEZQMWpsVDVLWHB2V0lxYlNZNTBuUUxLbStjcnN6TFBEWUFIc1lxd0FBQUpqMnhlQ1U5c1hnCmxBQUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQ1FsYUhGUDFqbFQ1S1hwdldJcWJTWTUwblFMS20rY3JzekxQRFlBSHNZcXcKQUFBRUJtSlI2T0RqdjA0dWxQOUtlN3RScUJwQzRudXpXblVJMU1FTEd3WlAydmlaQ1ZvY1UvV09WUGtwZW05WWlwdEpqbgpTZEFzcWI1eXV6TXM4TmdBZXhpckFBQUFGR3h2WjBCallYWmxkMkZzYkM1emVYTjBaVzF6QVE9PQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KRU9GCgpjYXQgPiB+Ly5zc2gvY29uZmlnIDw8IEVPRgpIb3N0IGdpdGh1YgogICAgSG9zdE5hbWUgICAgICAgIGdpdGh1Yi5jb20KICAgIFVzZXIgICAgICAgICAgICBnaXQKICAgIFBvcnQgICAgICAgICAgICAyMgogICAgSWRlbnRpdHlGaWxlICAgIH4vLnNzaC9pZF9lZDI1NTE5LXRvYmVybW9yeS1naXRodWJfZGVwbG95CkVPRgoKbWtkaXIgLXAgfi9zcmMvCmNkIH4vc3JjLwpnaXQgY2xvbmUgLWIgZGV2ZWxvcCBnaXRodWI6Z3VzZ3cvcnVuLmdpdCAxPiBnaXQub3V0IDI+IGdpdC5lcnIK",
+  "UserData": "IyEgL2Jpbi9iYXNoCgpybSAtcmYgL2V0Yy91cGRhdGUtbW90ZC5kLzEwLXVuYW1lCnJtIC1yZiAvZXRjL21vdGQKCmFwdCAteSB1cGRhdGUgMT4gL3Jvb3QvYXB0LnVwZGF0ZS5vdXQgMj4gL3Jvb3QvYXB0LnVwZGF0ZS5lcnIKYXB0IC15IHVwZ3JhZGUgMT4gL3Jvb3QvYXB0LnVwZ3JhZGUub3V0IDI+IC9yb290L2FwdC51cGdyYWRlLmVycgoKZm9yIHBrZyBpbiBnaXQgYmMgZ251cGcyIHJjbG9uZSBwYXJhbGxlbDsgZG8KICAgIGFwdCAteSBpbnN0YWxsICR7cGtnfSAxPiAvcm9vdC9hcHQuJHtwa2d9Lm91dCAyPiAvcm9vdC9hcHQuJHtwa2d9LmVycgpkb25lCg==",
+  "DisableApiStop": false,
   "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/xvda",
+      "Ebs": {
+        "Encrypted": false,
+        "DeleteOnTermination": true,
+        "Iops": 3000,
+        "VolumeSize": 8,
+        "VolumeType": "gp3",
+        "Throughput": 125
+      }
+    },
     {
       "DeviceName": "/dev/sdb",
       "Ebs": {
         "Encrypted": false,
-        "DeleteOnTermination": false,
+        "DeleteOnTermination": true,
         "VolumeSize": 32,
         "VolumeType": "gp2"
       }
@@ -21,15 +34,30 @@
   "NetworkInterfaces": [
     {
       "SubnetId": "subnet-06a7a7fdad97782c2",
+      "DeleteOnTermination": true,
       "AssociatePublicIpAddress": true,
       "DeviceIndex": 0,
+      "InterfaceType": "interface",
       "Groups": [
         "sg-08350bfb260921337"
       ]
     }
   ],
+  "LaunchTemplate": {
+    "LaunchTemplateId": "lt-0cca23a5faf98b870",
+    "Version": "6"
+  },
+  "HibernationOptions": {
+    "Configured": false
+  },
+  "Monitoring": {
+    "Enabled": false
+  },
   "CreditSpecification": {
     "CpuCredits": "standard"
+  },
+  "CapacityReservationSpecification": {
+    "CapacityReservationPreference": "open"
   },
   "TagSpecifications": [
     {
@@ -38,6 +66,26 @@
         {
           "Key": "Name",
           "Value": "tobermory-2"
+        },
+        {
+          "Key": "project",
+          "Value": "cavewall.systems"
+        },
+        {
+          "Key": "account",
+          "Value": "expense:cavewall:other:cloud:aws:ec2:compute"
+        },
+        {
+          "Key": "name",
+          "Value": "tobermory-2"
+        },
+        {
+          "Key": "path",
+          "Value": "/mnt/data"
+        },
+        {
+          "Key": "type",
+          "Value": "compute"
         }
       ]
     }
@@ -45,15 +93,25 @@
   "IamInstanceProfile": {
     "Arn": "arn:aws:iam::239424063529:instance-profile/tobermory-role-s3-0"
   },
+  "EnclaveOptions": {
+    "Enabled": false
+  },
   "MetadataOptions": {
     "HttpEndpoint": "enabled",
+    "HttpProtocolIpv6": "disabled",
     "HttpPutResponseHopLimit": 2,
     "HttpTokens": "required",
     "InstanceMetadataTags": "enabled"
+  },
+  "Placement": {
+    "Tenancy": "default"
   },
   "PrivateDnsNameOptions": {
     "HostnameType": "ip-name",
     "EnableResourceNameDnsARecord": true,
     "EnableResourceNameDnsAAAARecord": false
+  },
+  "MaintenanceOptions": {
+    "AutoRecovery": "default"
   }
 }
