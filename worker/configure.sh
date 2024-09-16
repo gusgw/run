@@ -1,8 +1,9 @@
 #! /bin/bash
 
 key=$1
-deploy=$2
-ip=$3
+ip=$2
+deploy=$3
+asc=$4
 
 while ! ssh  -i "~/.ssh/${key}" "admin@${ip}" which git; do
     sleep 5

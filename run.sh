@@ -46,8 +46,8 @@ export target_load=4.1
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
 encrypt_outputs="no"
-sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
-encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
+encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
 # job to test the script
@@ -60,9 +60,11 @@ set_stamp
 # Check commands are available
 check_dependency rclone
 check_dependency gpg
+check_dependency gawk
 check_dependency bc
 check_dependency parallel
 check_dependency niceload
+check_dependency stress
 
 # Report settings
 log_setting "cleanup when done" "${clean}"

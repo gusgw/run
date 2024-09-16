@@ -1,0 +1,59 @@
+{
+  "MaxCount": 1,
+  "MinCount": 1,
+  "ImageId": "ami-00902d02d7a700776",
+  "InstanceType": "t3.xlarge",
+  "KeyName": "tobermory-2-key-0",
+  "DisableApiTermination": true,
+  "EbsOptimized": true,
+  "UserData": "IyEgL2Jpbi9iYXNoCgphcHQgLXkgdXBkYXRlIDE+IH4vYXB0LnVwZGF0ZS5vdXQgMj4gfi9hcHQudXBkYXRlLmVycgphcHQgLXkgdXBncmFkZSAxPiB+L2FwdC51cGdyYWRlLm91dCAyPiB+L2FwdC51cGdyYWRlLmVycgoKc3UgYWRtaW4KCm1rZGlyIC1wIH4vLnNzaApjYXQgPiB+Ly5zc2gvaWRfZWQyNTUxOS10b2Jlcm1vcnktZ2l0aHViX2RlcGxveSA8PCBFT0YKLS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNDUWxhSEZQMWpsVDVLWHB2V0lxYlNZNTBuUUxLbStjcnN6TFBEWUFIc1lxd0FBQUpqMnhlQ1U5c1hnCmxBQUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQ1FsYUhGUDFqbFQ1S1hwdldJcWJTWTUwblFMS20rY3JzekxQRFlBSHNZcXcKQUFBRUJtSlI2T0RqdjA0dWxQOUtlN3RScUJwQzRudXpXblVJMU1FTEd3WlAydmlaQ1ZvY1UvV09WUGtwZW05WWlwdEpqbgpTZEFzcWI1eXV6TXM4TmdBZXhpckFBQUFGR3h2WjBCallYWmxkMkZzYkM1emVYTjBaVzF6QVE9PQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KRU9GCgpjYXQgPiB+Ly5zc2gvY29uZmlnIDw8IEVPRgpIb3N0IGdpdGh1YgogICAgSG9zdE5hbWUgICAgICAgIGdpdGh1Yi5jb20KICAgIFVzZXIgICAgICAgICAgICBnaXQKICAgIFBvcnQgICAgICAgICAgICAyMgogICAgSWRlbnRpdHlGaWxlICAgIH4vLnNzaC9pZF9lZDI1NTE5LXRvYmVybW9yeS1naXRodWJfZGVwbG95CkVPRgoKbWtkaXIgLXAgfi9zcmMvCmNkIH4vc3JjLwpnaXQgY2xvbmUgLWIgZGV2ZWxvcCBnaXRodWI6Z3VzZ3cvcnVuLmdpdCAxPiBnaXQub3V0IDI+IGdpdC5lcnIK",
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/sdb",
+      "Ebs": {
+        "Encrypted": false,
+        "DeleteOnTermination": false,
+        "VolumeSize": 32,
+        "VolumeType": "gp2"
+      }
+    }
+  ],
+  "NetworkInterfaces": [
+    {
+      "SubnetId": "subnet-06a7a7fdad97782c2",
+      "AssociatePublicIpAddress": true,
+      "DeviceIndex": 0,
+      "Groups": [
+        "sg-08350bfb260921337"
+      ]
+    }
+  ],
+  "CreditSpecification": {
+    "CpuCredits": "standard"
+  },
+  "TagSpecifications": [
+    {
+      "ResourceType": "instance",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "tobermory-2"
+        }
+      ]
+    }
+  ],
+  "IamInstanceProfile": {
+    "Arn": "arn:aws:iam::239424063529:instance-profile/tobermory-role-s3-0"
+  },
+  "MetadataOptions": {
+    "HttpEndpoint": "enabled",
+    "HttpPutResponseHopLimit": 2,
+    "HttpTokens": "required",
+    "InstanceMetadataTags": "enabled"
+  },
+  "PrivateDnsNameOptions": {
+    "HostnameType": "ip-name",
+    "EnableResourceNameDnsARecord": true,
+    "EnableResourceNameDnsAAAARecord": false
+  }
+}
