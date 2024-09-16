@@ -115,5 +115,6 @@ function send_outputs {
         fi
         break
     done
+
     return 0
 }
