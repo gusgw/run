@@ -21,7 +21,6 @@ job="$2"        # Give this run a name or number.
 # Specify inputs to fetch to workspace with rclone
 input="dummy:/mnt/data/chips/input"
 # input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
-
 iext="input"
 inglob="*.${iext}"
 
