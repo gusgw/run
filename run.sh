@@ -9,7 +9,6 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
 
-export WAIT=5.0
 export WAIT=10.0
 
 MAX_SUBPROCESSES=2
