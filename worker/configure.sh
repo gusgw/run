@@ -53,4 +53,10 @@ sudo mkfs.ext4 /dev/nvme1n1
 sudo mkdir -p /mnt/data
 sudo mount /dev/nvme1n1 /mnt/data
 sudo chown admin /mnt/data
+
+mkdir bin
+cd bin
+wget  http://s3.amazonaws.com/ec2metadata/ec2-metadata
+chmod u+x ./ec2-metadata
+ln -s ../src/run/run.sh run
 ENDSSH
