@@ -9,7 +9,7 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/bump.sh
 . ${run_path}/bump/parallel.sh
 
-export WAIT=5.0
+export WAIT=10.0
 
 MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=8
@@ -19,12 +19,14 @@ clean="$1"      # What should be cleaned up in the workspace?
 job="$2"        # Give this run a name or number.
 
 # Specify inputs to fetch to workspace with rclone
-input="dummy:/mnt/data/chips/input"
+# input="dummy:/mnt/data/chips/input"
+input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
 iext="input"
 inglob="*.${iext}"
 
 # Specify outputs to get from workspace with rclone when done
-output="dummy:/mnt/data/chips/output"
+# output="dummy:/mnt/data/chips/output"
+output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
 oext="output"
 outglob="*.${oext}"
 
@@ -42,15 +44,28 @@ export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-encrypt_outputs="no"
-sign="0x42B9BB51CE72038A4B97AD306F76D37987954AEC"
-encrypt="0x1B1F9924BC54B2EFD61F7F12E017B2531D708EC4"
+encrypt_outputs="yes"
+sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
+encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
 # job to test the script
 export run_type="test"
+export stress_cpus=2
+export output_size="1G"
 
 set_stamp
+
+# Check commands are available
+check_dependency rclone
+check_dependency gpg
+check_dependency gawk
+check_dependency bc
+check_dependency parallel
+check_dependency niceload
+check_dependency stress
+
+# Report settings
 log_setting "cleanup when done" "${clean}"
 log_setting "job to process" "${job}"
 log_setting "source for input data" "${input}"
@@ -102,7 +117,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        nice -n "$NICE" stress --verbose --cpu 2 &
+        nice -n "$NICE" stress --verbose --cpu "${stress_cpus}" &
         mainid=$!
     #---END---------
     else
@@ -144,7 +159,10 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        dd if=/dev/random of="${work}/${outname}" bs=1G count=1
+        dd if=/dev/random \
+           of="${work}/${outname}" \
+           bs="${output_size}" \
+           count=1
     #---END---------
     fi
 

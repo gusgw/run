@@ -15,9 +15,9 @@ ramdisk="/dev/shm/${job}-$$"
 log_setting "ramdisk space for this job" "${ramdisk}"
 mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
 
-insize=$(nice -n "${NICE}" rclone lsl "${input}/" \
-                                      --include "${inglob}*" |\
-                           awk '{sum+=$1} END {print sum;}')
+insize=$(nice -n "${NICE}" rclone --config "${run_path}/rclone.conf" lsl "${input}/" \
+                                  --include "${inglob}*" |\
+                                gawk '{sum+=$1} END {print sum;}')
 log_setting "size of inputs" "${insize}"
 worksize=$(echo ${insize}*${workfactor}+1 | bc -l | sed 's/\([0-9]*\)\..*$/\1/')
 log_setting "size needed for workspace" "${worksize}"

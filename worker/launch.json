@@ -1,0 +1,117 @@
+{
+  "MaxCount": 1,
+  "MinCount": 1,
+  "ImageId": "ami-00902d02d7a700776",
+  "InstanceType": "t3.xlarge",
+  "InstanceInitiatedShutdownBehavior": "terminate",
+  "KeyName": "tobermory-2-key-0",
+  "DisableApiTermination": false,
+  "EbsOptimized": true,
+  "UserData": "IyEgL2Jpbi9iYXNoCgpybSAtcmYgL2V0Yy91cGRhdGUtbW90ZC5kLzEwLXVuYW1lCnJtIC1yZiAvZXRjL21vdGQKCmFwdCAteSB1cGRhdGUgMT4gL3Jvb3QvYXB0LnVwZGF0ZS5vdXQgMj4gL3Jvb3QvYXB0LnVwZGF0ZS5lcnIKYXB0IC15IHVwZ3JhZGUgMT4gL3Jvb3QvYXB0LnVwZ3JhZGUub3V0IDI+IC9yb290L2FwdC51cGdyYWRlLmVycgoKZm9yIHBrZyBpbiBnaXQgYmMgZ251cGcyIHJjbG9uZSBwYXJhbGxlbDsgZG8KICAgIGFwdCAteSBpbnN0YWxsICR7cGtnfSAxPiAvcm9vdC9hcHQuJHtwa2d9Lm91dCAyPiAvcm9vdC9hcHQuJHtwa2d9LmVycgpkb25lCg==",
+  "DisableApiStop": false,
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/xvda",
+      "Ebs": {
+        "Encrypted": false,
+        "DeleteOnTermination": true,
+        "Iops": 3000,
+        "VolumeSize": 8,
+        "VolumeType": "gp3",
+        "Throughput": 125
+      }
+    },
+    {
+      "DeviceName": "/dev/sdb",
+      "Ebs": {
+        "Encrypted": false,
+        "DeleteOnTermination": true,
+        "VolumeSize": 32,
+        "VolumeType": "gp2"
+      }
+    }
+  ],
+  "NetworkInterfaces": [
+    {
+      "SubnetId": "subnet-06a7a7fdad97782c2",
+      "DeleteOnTermination": true,
+      "AssociatePublicIpAddress": true,
+      "DeviceIndex": 0,
+      "InterfaceType": "interface",
+      "Groups": [
+        "sg-08350bfb260921337"
+      ]
+    }
+  ],
+  "LaunchTemplate": {
+    "LaunchTemplateId": "lt-0cca23a5faf98b870",
+    "Version": "6"
+  },
+  "HibernationOptions": {
+    "Configured": false
+  },
+  "Monitoring": {
+    "Enabled": false
+  },
+  "CreditSpecification": {
+    "CpuCredits": "standard"
+  },
+  "CapacityReservationSpecification": {
+    "CapacityReservationPreference": "open"
+  },
+  "TagSpecifications": [
+    {
+      "ResourceType": "instance",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "tobermory-2"
+        },
+        {
+          "Key": "project",
+          "Value": "cavewall.systems"
+        },
+        {
+          "Key": "account",
+          "Value": "expense:cavewall:other:cloud:aws:ec2:compute"
+        },
+        {
+          "Key": "name",
+          "Value": "tobermory-2"
+        },
+        {
+          "Key": "path",
+          "Value": "/mnt/data"
+        },
+        {
+          "Key": "type",
+          "Value": "compute"
+        }
+      ]
+    }
+  ],
+  "IamInstanceProfile": {
+    "Arn": "arn:aws:iam::239424063529:instance-profile/tobermory-role-s3-0"
+  },
+  "EnclaveOptions": {
+    "Enabled": false
+  },
+  "MetadataOptions": {
+    "HttpEndpoint": "enabled",
+    "HttpProtocolIpv6": "disabled",
+    "HttpPutResponseHopLimit": 2,
+    "HttpTokens": "required",
+    "InstanceMetadataTags": "enabled"
+  },
+  "Placement": {
+    "Tenancy": "default"
+  },
+  "PrivateDnsNameOptions": {
+    "HostnameType": "ip-name",
+    "EnableResourceNameDnsARecord": true,
+    "EnableResourceNameDnsAAAARecord": false
+  },
+  "MaintenanceOptions": {
+    "AutoRecovery": "default"
+  }
+}

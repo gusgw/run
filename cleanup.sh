@@ -84,7 +84,11 @@ function cleanup_run {
 
     >&2 echo "${STAMP}: . . . all done with code ${rc}"
     >&2 echo "---"
-    exit $rc
+    if [ "$clean" == "all" ] && [ "$rc" -eq 0 ]; then
+        sudo shutdown now
+    else
+        exit $rc
+    fi
 }
 
 export parallel_cleanup_function="parallel_cleanup_run"
