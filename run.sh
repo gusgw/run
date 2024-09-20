@@ -44,7 +44,7 @@ export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-encrypt_outputs="no"
+encrypt_outputs="yes"
 sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
 encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
