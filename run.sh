@@ -210,7 +210,7 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
         while read pid; do
             if kill -0 "${pid%% *}" 2> /dev/null; then
                 memory_report "${job} run" "${pid%% *}" \
-                              "${logs}/${STAMP}.${job}.${pid%% *}.memory"
+                    "${logs}/${STAMP}.${job}.${pid%% *}.memory"
             fi
         done < $ramdisk/workers
     fi
@@ -236,7 +236,6 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     fi
 done
 echo
-print_rule
 
 ######################################################################
 cleanup 0

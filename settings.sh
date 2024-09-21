@@ -21,5 +21,3 @@ insize=$(nice -n "${NICE}" rclone --config "${run_path}/rclone.conf" lsl "${inpu
 log_setting "size of inputs" "${insize}"
 worksize=$(echo ${insize}*${workfactor}+1 | bc -l | sed 's/\([0-9]*\)\..*$/\1/')
 log_setting "size needed for workspace" "${worksize}"
-
-print_error_rule

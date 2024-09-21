@@ -9,7 +9,6 @@ function get_inputs {
                 --transfers "${INBOUND_TRANSFERS}" \
                 --include "${inglob}.gpg" ||\
         report $? "download input data"
-    print_rule
     nice -n "${NICE}" rclone sync \
                 "${input}/" \
                 "${work}/" \
@@ -19,7 +18,6 @@ function get_inputs {
                 --transfers "${INBOUND_TRANSFERS}" \
                 --include "${inglob}" ||\
         report $? "download input data"
-    print_rule
 
     return 0
 }
@@ -46,8 +44,6 @@ function decrypt_inputs {
                 free_memory_report "${job} gpg" \
                                    "${logs}/${STAMP}.${job}.$$.free"
             done
-            echo
-            print_rule
         fi
         break
     done
@@ -77,8 +73,6 @@ function encrypt_outputs {
         free_memory_report "${job} gpg" \
                            "${logs}/${STAMP}.${job}.$$.free"
     done
-    echo
-    print_rule
 
     return 0
 }
