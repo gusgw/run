@@ -31,8 +31,7 @@ function decrypt_inputs {
     for file in ${work}/${inglob}.gpg; do
         if [ -e "${file}" ]; then
             find "${work}" -name "${inglob}.gpg" |\
-                parallel --eta --tag --tagstring {.} \
-                         --results "${logs}/gpg/input/{/}/" \
+                parallel --results "${logs}/gpg/input/{/}/" \
                          --joblog "${logs}/${STAMP}.${job}.gpg.input.log" \
                          --jobs "$MAX_SUBPROCESSES" \
                     nice -n "${NICE}" gpg --output {.} \
@@ -61,8 +60,7 @@ function decrypt_inputs {
 function encrypt_outputs {
 
     find "${work}" -name "${outglob}" |\
-        parallel --eta --tag --tagstring {} \
-                 --results "${logs}/gpg/output/{/}/" \
+        parallel --results "${logs}/gpg/output/{/}/" \
                  --joblog "${logs}/${STAMP}.${job}.gpg.output.log" \
                  --jobs "$MAX_SUBPROCESSES" \
             nice -n "${NICE}" gpg --output {}.gpg \

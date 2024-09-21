@@ -194,8 +194,7 @@ decrypt_inputs
 ######################################################################
 # Run the job
 find "${work}" -name "${inglob}" |\
-    parallel --eta --tag --tagstring {} \
-             --results "${logs}/run/{/}/" \
+    parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
