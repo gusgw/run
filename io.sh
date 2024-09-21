@@ -41,8 +41,8 @@ function decrypt_inputs {
                                           --with-colons \
                                           --always-trust \
                                           --lock-multiple {} &
-            parallel_pid=$!
-            while kill -0 "$parallel_pid" 2> /dev/null; do
+            local di_parallel_pid=$!
+            while kill -0 "$di_parallel_pid" 2> /dev/null; do
                 sleep ${WAIT}
                 load_report "${job} decrypt"  "${logs}/${STAMP}.${job}.$$.load"
                 free_memory_report "${job} gpg" \
@@ -72,8 +72,8 @@ function encrypt_outputs {
                                   --lock-multiple \
                                   --sign --local-user "$sign" \
                                   --encrypt --recipient "$encrypt" {} &
-    parallel_pid=$!
-    while kill -0 "$parallel_pid" 2> /dev/null; do
+    local eo_parallel_pid=$!
+    while kill -0 "$eo_parallel_pid" 2> /dev/null; do
         sleep ${WAIT}
         load_report "${job} encrypt"  "${logs}/${STAMP}.${job}.$$.load"
         free_memory_report "${job} gpg" \
