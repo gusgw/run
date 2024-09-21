@@ -199,7 +199,7 @@ find "${work}" -name "${inglob}" |\
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
 
-export parallel_pid=$!
+parallel_pid=$!
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
