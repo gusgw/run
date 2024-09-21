@@ -29,7 +29,8 @@ function cleanup_run {
 
     ######################################################################
     # Encrypt the results
-    if [ "${encrypt_outputs}" == "yes" ]; then
+    if [ "${encrypt_flag}" == "yes" ]; then
+        >&2 echo "${STAMP}: calling encrypt_outputs"
         encrypt_outputs
     fi
 
