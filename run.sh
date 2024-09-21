@@ -10,10 +10,11 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/parallel.sh
 
 export WAIT=10.0
+export SKIP=12
 
 MAX_SUBPROCESSES=2
-INBOUND_TRANSFERS=8
-OUTBOUND_TRANSFERS=8
+INBOUND_TRANSFERS=4
+OUTBOUND_TRANSFERS=4
 
 clean="$1"      # What should be cleaned up in the workspace?
 job="$2"        # Give this run a name or number.
@@ -31,20 +32,20 @@ oext="output"
 outglob="*.${oext}"
 
 # Where is the working directory?
-workspace="/mnt/data/chips/work"
+workspace="/mnt/data/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-logspace="/mnt/data/chips/log"
+logspace="/mnt/data/log"
 
 # Set a target system load visible to subprocesses
 export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-encrypt_outputs="yes"
+encrypt_flag="yes"
 sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
 encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
@@ -76,7 +77,16 @@ log_setting "target system load" "${target_load}"
 log_setting "signing key" "$sign"
 log_setting "encryption key" "$encrypt"
 
+# Automatic settings
 . ${run_path}/settings.sh
+
+# Load routines for fetching inputs and sending outputs
+. ${run_path}/io.sh
+
+# Load AWS specific routines
+. ${run_path}/aws.sh
+
+# Load cleanup and prepare to trap signals
 . ${run_path}/cleanup.sh
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
@@ -129,7 +139,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..3}; do
+        for k in {1..24}; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
@@ -160,9 +170,10 @@ function run {
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
         dd if=/dev/random \
-           of="${work}/${outname}" \
+           of="${work}/${outname}.tmp" \
            bs="${output_size}" \
            count=1
+        mv "${work}/${outname}.tmp" "${work}/${outname}"
     #---END---------
     fi
 
@@ -174,30 +185,24 @@ export -f run
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
 
-# Load routines for fetching inputs and sending outputs
-. ${run_path}/io.sh
-
 ######################################################################
 # Get the input data
-
 get_inputs
 
 ######################################################################
 # Decrypt inputs if necessary
-
 decrypt_inputs
 
 ######################################################################
 # Run the job
-
 find "${work}" -name "${inglob}" |\
-    parallel --eta --tag --tagstring {} \
-             --results "${logs}/run/{/}/" \
+    parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
 
 parallel_pid=$!
+counter=0
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
@@ -205,27 +210,32 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
         while read pid; do
             if kill -0 "${pid%% *}" 2> /dev/null; then
                 memory_report "${job} run" "${pid%% *}" \
-                              "${logs}/${STAMP}.${job}.${pid%% *}.memory"
+                    "${logs}/${STAMP}.${job}.${pid%% *}.memory"
             fi
         done < $ramdisk/workers
     fi
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
+    spot_interruption_found || report "${SHUTDOWN_SIGNAL}" \
+                                      "checking for interruption" \
+                                      "spot interruption detected"
+
+    counter=$(( counter+1 ))
+    if [[ "$counter" -eq "$skip" ]]; then
+
+        # Encrypt the results
+        if [ "${encrypt_flag}" == "yes" ]; then
+            >&2 echo "${STAMP}: calling encrypt_outputs"
+            encrypt_outputs
+        fi
+
+        # Save the results to the output destination
+        send_outputs
+
+        counter=0
+    fi
 done
 echo
-print_rule
-
-######################################################################
-# Encrypt the results
-
-if [ "${encrypt_outputs}" == "yes" ]; then
-    encrypt_outputs
-fi
-
-######################################################################
-# Save the results to the output destination
-
-send_outputs
 
 ######################################################################
 cleanup 0

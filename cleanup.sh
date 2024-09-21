@@ -11,9 +11,34 @@ function cleanup_run {
     ######################################
 
     local rc=$1
+
     >&2 echo "---"
     >&2 echo "${STAMP}: exiting cleanly with code ${rc}. . ."
 
+    ######################################################################
+    # Signal GNU Parallel if necessary
+    # One TERM signal stops new jobs from starting,
+    # two term signals kills existing jobs.
+    if [ -n "$parallel_pid" ]; then
+        log_setting "PID of GNU Parallel" "$parallel_pid"
+        if kill -0 "$parallel_pid" 2> /dev/null; then
+            >&2 echo "${STAMP}: signalling parallel"
+            kill -TERM "$parallel_pid"
+            kill -TERM "$parallel_pid"
+        fi
+    fi
+
+    ######################################################################
+    # Encrypt the results
+    if [ "${encrypt_flag}" == "yes" ]; then
+        >&2 echo "${STAMP}: calling encrypt_outputs"
+        encrypt_outputs
+    fi
+
+    ######################################################################
+    # Save the results to the output destination
+    >&2 echo "${STAMP}: saving outputs"
+    send_outputs
 
     if ! [ "$clean" == "keep" ]; then
         >&2 echo "${STAMP}: removing downloaded input files"
@@ -58,12 +83,11 @@ function cleanup_run {
     done < $ramdisk/workers
 
     local log_archive="${work}/${STAMP}.${job}.$$.logs.tar.xz"
-    tar Jcvf "${log_archive}" "${logs}/"
+    tar Jcvf "${log_archive}" "${logspace}/"
     rclone copy "${log_archive}" \
                 "${output}/" \
                 --config "${run_path}/rclone.conf" \
-                --progress \
-                --log-level INFO \
+                --log-level WARNING \
                 --transfers "${OUTBOUND_TRANSFERS}" ||\
         report $? "sending logs to output folder"
 

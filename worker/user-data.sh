@@ -35,7 +35,8 @@ done
 mkfs.ext4 /dev/nvme1n1
 mkdir -p /mnt/data
 mount /dev/nvme1n1 /mnt/data
-chown admin /mnt/data
+mkdir -p /mnt/data/log
+chown --recursive admin /mnt/data
 
 mkdir -p /home/admin/bin
 chown admin /home/admin/bin
@@ -124,6 +125,7 @@ chmod u+x ./ec2-metadata
 ln -s ../src/run/run.sh run
 
 # Run the job
-~/bin/run all 0
+~/bin/run all 0 \
+    1> /mnt/data/log/run.out \
+    2> /mnt/data/log/run.err
 EOS
-
