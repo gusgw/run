@@ -4,8 +4,7 @@ function get_inputs {
                 "${input}/" \
                 "${work}/" \
                 --config "${run_path}/rclone.conf" \
-                --progress \
-                --log-level INFO \
+                --log-level WARNING \
                 --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
                 --transfers "${INBOUND_TRANSFERS}" \
                 --include "${inglob}.gpg" ||\
@@ -15,8 +14,7 @@ function get_inputs {
                 "${input}/" \
                 "${work}/" \
                 --config "${run_path}/rclone.conf" \
-                --progress \
-                --log-level INFO \
+                --log-level WARNING \
                 --log-file "${logs}/${STAMP}.${job}.rclone.input.log" \
                 --transfers "${INBOUND_TRANSFERS}" \
                 --include "${inglob}" ||\
@@ -93,8 +91,7 @@ function send_outputs {
                     "${work}/" \
                     "${output}/" \
                     --config "${run_path}/rclone.conf" \
-                    --progress \
-                    --log-level INFO \
+                    --log-level WARNING \
                     --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
                     --include "${outglob}.gpg" \
                     --transfers "${OUTBOUND_TRANSFERS}" ||\
@@ -104,8 +101,7 @@ function send_outputs {
                     "${work}/" \
                     "${output}/" \
                     --config "${run_path}/rclone.conf" \
-                    --progress \
-                    --log-level INFO \
+                    --log-level WARNING \
                     --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
                     --include "${outglob}" \
                     --transfers "${OUTBOUND_TRANSFERS}" ||\

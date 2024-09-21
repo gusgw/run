@@ -86,8 +86,7 @@ function cleanup_run {
     rclone copy "${log_archive}" \
                 "${output}/" \
                 --config "${run_path}/rclone.conf" \
-                --progress \
-                --log-level INFO \
+                --log-level WARNING \
                 --transfers "${OUTBOUND_TRANSFERS}" ||\
         report $? "sending logs to output folder"
 
