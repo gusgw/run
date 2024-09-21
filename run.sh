@@ -11,9 +11,9 @@ run_path=$(dirname $(realpath  $0))
 
 export WAIT=10.0
 
-export MAX_SUBPROCESSES=2
-export INBOUND_TRANSFERS=8
-export OUTBOUND_TRANSFERS=8
+MAX_SUBPROCESSES=2
+INBOUND_TRANSFERS=4
+OUTBOUND_TRANSFERS=4
 
 clean="$1"      # What should be cleaned up in the workspace?
 job="$2"        # Give this run a name or number.
@@ -26,27 +26,27 @@ inglob="*.${iext}"
 
 # Specify outputs to get from workspace with rclone when done
 # output="dummy:/mnt/data/chips/output"
-export output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
-export oext="output"
-export outglob="*.${oext}"
+output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
+oext="output"
+outglob="*.${oext}"
 
 # Where is the working directory?
-export workspace="/mnt/data/work"
+workspace="/mnt/data/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-export logspace="/mnt/data/log"
+logspace="/mnt/data/log"
 
 # Set a target system load visible to subprocesses
 export target_load=4.1
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-export encrypt_flag="yes"
-export sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
-export encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
+encrypt_flag="yes"
+sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
+encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
 # job to test the script
