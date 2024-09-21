@@ -31,13 +31,13 @@ oext="output"
 outglob="*.${oext}"
 
 # Where is the working directory?
-workspace="/mnt/data/chips/work"
+workspace="/mnt/data/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-logspace="/mnt/data/chips/log"
+logspace="/mnt/data/log"
 
 # Set a target system load visible to subprocesses
 export target_load=4.1
@@ -76,7 +76,16 @@ log_setting "target system load" "${target_load}"
 log_setting "signing key" "$sign"
 log_setting "encryption key" "$encrypt"
 
+# Automatic settings
 . ${run_path}/settings.sh
+
+# Load routines for fetching inputs and sending outputs
+. ${run_path}/io.sh
+
+# Load AWS specific routines
+. ${run_path}/aws.sh
+
+# Load cleanup and prepare to trap signals
 . ${run_path}/cleanup.sh
 
 # run "${workspace}" "${log}" "${ramdisk}" "${job}" {}
@@ -174,22 +183,16 @@ export -f run
 # Set a handler for signals that stop work
 trap handle_signal 1 2 3 6 15
 
-# Load routines for fetching inputs and sending outputs
-. ${run_path}/io.sh
-
 ######################################################################
 # Get the input data
-
 get_inputs
 
 ######################################################################
 # Decrypt inputs if necessary
-
 decrypt_inputs
 
 ######################################################################
 # Run the job
-
 find "${work}" -name "${inglob}" |\
     parallel --eta --tag --tagstring {} \
              --results "${logs}/run/{/}/" \
@@ -197,7 +200,7 @@ find "${work}" -name "${inglob}" |\
              --jobs "${MAX_SUBPROCESSES}" \
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
 
-parallel_pid=$!
+export parallel_pid=$!
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
@@ -211,21 +214,12 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     fi
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
+    spot_interruption_found || report "${SHUTDOWN_SIGNAL}" \
+                                      "checking for interruption" \
+                                      "spot interruption detected"
 done
 echo
 print_rule
-
-######################################################################
-# Encrypt the results
-
-if [ "${encrypt_outputs}" == "yes" ]; then
-    encrypt_outputs
-fi
-
-######################################################################
-# Save the results to the output destination
-
-send_outputs
 
 ######################################################################
 cleanup 0
