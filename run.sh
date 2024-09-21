@@ -10,6 +10,7 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/parallel.sh
 
 export WAIT=10.0
+export SKIP=12
 
 MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
@@ -138,7 +139,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..3}; do
+        for k in {1..24}; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
@@ -169,9 +170,10 @@ function run {
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
         dd if=/dev/random \
-           of="${work}/${outname}" \
+           of="${work}/${outname}.tmp" \
            bs="${output_size}" \
            count=1
+        mv "${work}/${outname}.tmp" "${work}/${outname}"
     #---END---------
     fi
 
@@ -200,6 +202,7 @@ find "${work}" -name "${inglob}" |\
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
 
 parallel_pid=$!
+counter=0
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
@@ -216,6 +219,21 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     spot_interruption_found || report "${SHUTDOWN_SIGNAL}" \
                                       "checking for interruption" \
                                       "spot interruption detected"
+
+    counter=$(( counter+1 ))
+    if [[ "$counter" -eq "$skip" ]]; then
+
+        # Encrypt the results
+        if [ "${encrypt_flag}" == "yes" ]; then
+            >&2 echo "${STAMP}: calling encrypt_outputs"
+            encrypt_outputs
+        fi
+
+        # Save the results to the output destination
+        send_outputs
+
+        counter=0
+    fi
 done
 echo
 print_rule
