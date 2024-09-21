@@ -11,9 +11,29 @@ function cleanup_run {
     ######################################
 
     local rc=$1
+
+
     >&2 echo "---"
     >&2 echo "${STAMP}: exiting cleanly with code ${rc}. . ."
 
+    if [ -n "$encrypt_flag" ]; then
+        log_setting "output encryption flag" "$encrypt_flag"
+    fi
+    if [ -n "$work" ]; then
+        log_setting "work folder" "$work"
+    fi
+    if [ -n "$job" ]; then
+        log_setting "job id" "$job"
+    fi
+    if [ -n "$logs" ]; then
+        log_setting "logs for this job" "$logs"
+    fi
+    if [ -n "$sign" ]; then
+        log_setting "signing key" "$sign"
+    fi
+    if [ -n "$encrypt" ]; then
+        log_setting "encryption key" "$encrypt"
+    fi
     ######################################################################
     # Signal GNU Parallel if necessary
     # One TERM signal stops new jobs from starting,
