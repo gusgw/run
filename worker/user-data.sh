@@ -3,7 +3,7 @@
 export worker="tobermory-2"
 export rclone="${worker}-rclone.conf"
 export deploy="id_ed25519-tobermory-github_deploy"
-export branch="29-on-demand"
+export branch="develop"
 
 mkdir -p /root/user-data-output
 chmod a+rwx /root/user-data-output
