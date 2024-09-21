@@ -37,6 +37,7 @@ function cleanup_run {
 
     ######################################################################
     # Save the results to the output destination
+    >&2 echo "${STAMP}: saving outputs"
     send_outputs
 
     if ! [ "$clean" == "keep" ]; then
