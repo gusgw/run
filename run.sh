@@ -16,6 +16,8 @@ MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
 OUTBOUND_TRANSFERS=4
 
+ec2_flag="yes"
+
 clean="$1"      # What should be cleaned up in the workspace?
 job="$2"        # Give this run a name or number.
 
@@ -216,11 +218,12 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     fi
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
-    spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
-                                    report report "${SHUTDOWN_SIGNAL}" \
-                                    "checking for interruption" \
-                                    "spot interruption detected"
-
+    if [ "$ec2_flag" == "yes" ]; then
+        spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
+                                report report "${SHUTDOWN_SIGNAL}" \
+                                "checking for interruption" \
+                                "spot interruption detected"
+    fi
     counter=$(( counter+1 ))
     if [[ "$counter" -eq "$skip" ]]; then
 
