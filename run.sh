@@ -225,7 +225,7 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
                                 "spot interruption detected"
     fi
     counter=$(( counter+1 ))
-    if [[ "$counter" -eq "$skip" ]]; then
+    if [ "$counter" == "$skip" ]; then
 
         # Encrypt the results
         if [ "${encrypt_flag}" == "yes" ]; then
