@@ -79,30 +79,30 @@ function encrypt_outputs {
 
 function send_outputs {
 
-    for file in ${work}/${outglob}.gpg; do
-        if [ -e "${file}" ]; then
-            nice -n "${NICE}" rclone copy \
-                    "${work}/" \
-                    "${output}/" \
-                    --config "${run_path}/rclone.conf" \
-                    --log-level WARNING \
-                    --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
-                    --include "${outglob}.gpg" \
-                    --transfers "${OUTBOUND_TRANSFERS}" ||\
-                report $? "save results"
-        else
-            nice -n "${NICE}" rclone copy \
-                    "${work}/" \
-                    "${output}/" \
-                    --config "${run_path}/rclone.conf" \
-                    --log-level WARNING \
-                    --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
-                    --include "${outglob}" \
-                    --transfers "${OUTBOUND_TRANSFERS}" ||\
-                report $? "save results"
-        fi
-        break
-    done
+    # for file in ${work}/${outglob}.gpg; do
+    if [ "${encrypt_flag}" == "yes" ]; then
+        nice -n "${NICE}" rclone copy \
+                "${work}/" \
+                "${output}/" \
+                --config "${run_path}/rclone.conf" \
+                --log-level WARNING \
+                --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
+                --include "${outglob}.gpg" \
+                --transfers "${OUTBOUND_TRANSFERS}" ||\
+            report $? "save results"
+    else
+        nice -n "${NICE}" rclone copy \
+                "${work}/" \
+                "${output}/" \
+                --config "${run_path}/rclone.conf" \
+                --log-level WARNING \
+                --log-file "${logs}/${STAMP}.${job}.rclone.output.log" \
+                --include "${outglob}" \
+                --transfers "${OUTBOUND_TRANSFERS}" ||\
+            report $? "save results"
+    fi
+    #     break
+    # done
 
     return 0
 }
