@@ -216,9 +216,10 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     fi
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
-    spot_interruption_found || report "${SHUTDOWN_SIGNAL}" \
-                                      "checking for interruption" \
-                                      "spot interruption detected"
+    spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
+                                    report report "${SHUTDOWN_SIGNAL}" \
+                                    "checking for interruption" \
+                                    "spot interruption detected"
 
     counter=$(( counter+1 ))
     if [[ "$counter" -eq "$skip" ]]; then
