@@ -4,7 +4,7 @@
 function spot_interruption_found {
     local ec2_metadata_save=$1
     log_setting "file to save metadata" "$ec2_metadata_save"
-    ec2-metadata > "$ec2_metadata_save" ||\
+    ec2-metadata 2> /dev/null 1> "$ec2_metadata_save" ||\
             report $? "checking for ec2 metadata"
     rc=$?
     if [ "$rc" -eq 0 ]; then
