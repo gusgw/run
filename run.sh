@@ -134,7 +134,7 @@ function run {
     #---END---------
     else
     #---REAL CODE---
-        echo "working"
+        echo "working" &
         mainid=$!
     #---END---------
     fi
