@@ -239,7 +239,6 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
         counter=0
     fi
 done
-echo
 
 ######################################################################
 cleanup 0
