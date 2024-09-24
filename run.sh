@@ -107,16 +107,16 @@ function run {
     # File to work on
     local input="$5"
 
-    parallel_log_setting "job" "${job}"
-    parallel_log_setting "file to work on" "${input}"
     parallel_log_setting "workspace" "${work}"
     parallel_log_setting "log destination" "${logs}"
     parallel_log_setting "ramdisk space" "${ramdisk}"
+
+    parallel_log_setting "job" "${job}"
+    parallel_log_setting "file to work on" "${input}"
+
     parallel_log_setting "target system load" "${target_load}"
 
-    parallel_check_exists "${work}"
     parallel_check_exists "${input}"
-    parallel_check_exists "${ramdisk}"
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
@@ -168,7 +168,7 @@ function run {
     #---END---------
     else
     #---REAL-CODE---
-        wait $mainid || parallel_report $? "working"
+        wait $mainid || parallel_report $? "waiting for run to finish"
     #---END---------
     fi
 
