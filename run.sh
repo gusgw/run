@@ -52,8 +52,11 @@ sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
 encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
-# job to test the script
+# job to test the script.
+# Export the variables because they are used in the processes
+# spawned by GNU parallel.
 export run_type="test"
+export n_test_waits=6
 export stress_cpus=2
 export output_size="1G"
 
@@ -141,7 +144,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in {1..24}; do
+        for k in $(seq 1 $n_test_waits); ; do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
