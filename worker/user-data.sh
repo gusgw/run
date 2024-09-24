@@ -1,5 +1,9 @@
 #! /bin/bash
 
+export WAIT=10.0
+export SKIP=1
+export MAX_WAIT=12
+
 export worker="tobermory-2"
 export rclone="${worker}-rclone.conf"
 export deploy="id_ed25519-tobermory-github_deploy"
@@ -24,12 +28,13 @@ for pkg in git gawk bc gnupg2 htop stress rclone parallel; do
         2> /root/user-data-output/apt.${pkg}.err
 done
 
-while ! which git; do
-    sleep 5
-done
-
+counter=0
 while ! id admin; do
     sleep 5
+    counter=$(( counter+1 ))
+    if [ "$counter" -ge "$MAX_WAIT" ]; then
+        break
+    fi 
 done
 
 mkfs.ext4 /dev/nvme1n1
