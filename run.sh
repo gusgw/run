@@ -210,7 +210,9 @@ parallel_pid=$!
 counter=0
 while kill -0 "$parallel_pid" 2> /dev/null; do
     sleep ${WAIT}
+
     load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
+
     if [ -f "$ramdisk/workers" ]; then
         while read pid; do
             if kill -0 "${pid%% *}" 2> /dev/null; then
@@ -219,14 +221,19 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
             fi
         done < $ramdisk/workers
     fi
+
     free_memory_report "${job} run" \
                        "${logs}/${STAMP}.${job}.$$.free"
+
+    # Check for a spot interruption notice
     if [ "$ec2_flag" == "yes" ]; then
         spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
                                 report report "${SHUTDOWN_SIGNAL}" \
                                 "checking for interruption" \
                                 "spot interruption detected"
     fi
+
+    # Run encryption and rclone at intervals
     counter=$(( counter+1 ))
     if [ "$counter" == "$skip" ]; then
 
@@ -239,6 +246,7 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
         # Save the results to the output destination
         send_outputs
 
+        # Reset counter if outputs have been saved
         counter=0
     fi
 done
