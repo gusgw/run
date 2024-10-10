@@ -1,9 +1,11 @@
 # Simple parallel computation
 Angus Gray-Weale
-2024-10-04
+2024-10-10
 
 *This repository is a work in progress. It has been through limited
-testing, and requires clearer control of its settings.*
+testing, and requires clearer control of its settings. [Email me if
+you’d like access or information about projects and publications that
+use this code.](mailto:github.com.h3com@passmail.net)*
 
 This repository provides a set of `bash` scripts that handles simple
 parallel execution using GNU Parallel, for example on AWS Spot
