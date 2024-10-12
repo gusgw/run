@@ -2,16 +2,16 @@ export RULE="***"
 
 export NICE=19
 
-work="${workspace}/${job}"
+export work="${workspace}/${job}"
 log_setting "workspace subfolder for this job" "${work}"
 mkdir -p "${work}" || report $? "create work folder for $job"
 
-logs="${logspace}/${job}"
+export logs="${logspace}/${job}"
 log_setting "log subfolder for this job" "${logs}"
 mkdir -p "${logs}" || report $? "create log folder for $job"
 mkdir -p "${logs}/status" || report $? "create status folder for $job"
 
-ramdisk="/dev/shm/${job}-$$"
+export ramdisk="/dev/shm/${job}-$$"
 log_setting "ramdisk space for this job" "${ramdisk}"
 mkdir -p "${ramdisk}" || report $? "setup ramdisk for $job"
 

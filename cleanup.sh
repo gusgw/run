@@ -20,13 +20,31 @@ function cleanup_run {
     # One TERM signal stops new jobs from starting,
     # two term signals kills existing jobs.
     if [ -n "$parallel_pid" ]; then
-        log_setting "PID of GNU Parallel" "$parallel_pid"
+        log_setting "PID of GNU Parallel for cleanup" "$parallel_pid"
         if kill -0 "$parallel_pid" 2> /dev/null; then
             >&2 echo "${STAMP}: signalling parallel"
             kill -TERM "$parallel_pid"
             kill -TERM "$parallel_pid"
         fi
     fi
+
+    ######################################################################
+    # Save the status of this process and kill remaining workers
+    # before the rest of the cleanup work
+
+    >&2 echo "${STAMP}: checking for child processes"
+
+    local status="${logs}/status/$$.${STAMP}.cleanup.status"
+    cp "/proc/$$/status" "$status"
+    chmod u+w "$status"
+
+    while read pid; do
+        while kill -0 "${pid%% *}" 2> /dev/null; do
+            >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
+            kill "${pid%% *}" || report $? "killing $pid"
+            sleep ${WAIT}
+        done
+    done < $ramdisk/workers
 
     ######################################################################
     # Encrypt the results
@@ -68,22 +86,10 @@ function cleanup_run {
         >&2 echo "${STAMP}: keeping GPG files"
     fi
 
-    >&2 echo "${STAMP}: checking for child processes"
-
-    local status="${logs}/status/$$.${STAMP}.cleanup.status"
-    cp "/proc/$$/status" "$status"
-    chmod u+w "$status"
-
-    while read pid; do
-        while kill -0 "${pid%% *}" 2> /dev/null; do
-            >&2 echo "${STAMP}: ${pid} is still running - trying to stop it"
-            kill $pid || report $? "killing $pid"
-            sleep ${WAIT}
-        done
-    done < $ramdisk/workers
-
     local log_archive="${work}/${STAMP}.${job}.$$.logs.tar.xz"
-    tar Jcvf "${log_archive}" "${logspace}/"
+    savewd="$(pwd)"
+    cd "${logspace}" && tar Jcvf "${log_archive}" "${job}/"
+    cd "${savewd}"
     rclone copy "${log_archive}" \
                 "${output}/" \
                 --config "${run_path}/rclone.conf" \

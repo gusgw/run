@@ -21,3 +21,20 @@ function spot_interruption_found {
         return 0
     fi
 }
+
+# While a given process is running, check for a spot
+# interruption periodically. If an interruption notice
+# is found report and trigger cleanup and shutdown.
+function poll_spot_interruption {
+    local psi_pid=$1
+    local psi_wait=$2
+    not_empty "$psi_pid" "PID running while interruption checks needed"
+    not_empty "$psi_wait" "time between checks for an interruption notice"
+    while kill -0 "$psi_pid" 2> /dev/null; do
+        sleep "$psi_wait"
+        spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
+                                report "${SHUTDOWN_SIGNAL}" \
+                                "checking for interruption" \
+                                "spot interruption detected"
+    done
+}

@@ -2,7 +2,7 @@
 
 # Set the folder where this script is located
 # so that other files can be found.
-run_path=$(dirname $(realpath  $0))
+export run_path=$(dirname $(realpath  $0))
 
 # Load useful routines
 # https://github.com/gusgw/bump
@@ -10,46 +10,49 @@ run_path=$(dirname $(realpath  $0))
 . ${run_path}/bump/parallel.sh
 
 export WAIT=10.0
-export SKIP=12
+export output_wait=120.0
 
-MAX_SUBPROCESSES=2
+export MAX_SUBPROCESSES=2
 INBOUND_TRANSFERS=4
-OUTBOUND_TRANSFERS=4
+export OUTBOUND_TRANSFERS=4
 
-ec2_flag="yes"
+export OPT_NICELOAD=""
+export OPT_PARALLEL=""
+
+ec2_flag="no"
 
 clean="$1"      # What should be cleaned up in the workspace?
-job="$2"        # Give this run a name or number.
+export job="$2"        # Give this run a name or number.
 
 # Specify inputs to fetch to workspace with rclone
-# input="dummy:/mnt/data/chips/input"
-input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
+input="dummy:/mnt/data/chips/input"
+# input="aws-sydney-std:cavewall-tobermory-mnt-data-chips-input-test-0/"
 iext="input"
 inglob="*.${iext}"
 
 # Specify outputs to get from workspace with rclone when done
-# output="dummy:/mnt/data/chips/output"
-output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
+export output="dummy:/mnt/data/chips/output"
+# export output="aws-sydney-std:cavewall-tobermory-mnt-data-chips-output-test-0/"
 oext="output"
-outglob="*.${oext}"
+export outglob="*.${oext}"
 
 # Where is the working directory?
-workspace="/mnt/data/work"
+workspace="/mnt/data/chips/work"
 
 # Estimate the size of files generated as a multiple of input size
 workfactor=1.2
 
 # Where should logs be stored?
-logspace="/mnt/data/log"
+logspace="/mnt/data/chips/log"
 
 # Set a target system load visible to subprocesses
-export target_load=4.1
+export target_load=6.0
 
 # Specify keys for decryption of inputs,
 # and for signing and encryption of outputs
-encrypt_flag="yes"
-sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
-encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
+export encrypt_flag="yes"
+export sign="0x0EBB90D1DC0B1150FF99A356E46ED00B12038406"
+export encrypt="0x67FC8A8BDC06FA0CAC4B0F5BB0F8791F5D69F478"
 
 # Run type should be test if we're using a dummy
 # job to test the script.
@@ -60,6 +63,7 @@ export n_test_waits=6
 export stress_cpus=2
 export output_size="1G"
 
+# Set information for log outputs
 set_stamp
 
 # Check commands are available
@@ -203,53 +207,30 @@ decrypt_inputs
 find "${work}" -name "${inglob}" |\
     parallel --results "${logs}/run/{/}/" \
              --joblog "${logs}/${STAMP}.${job}.run.log" \
-             --jobs "${MAX_SUBPROCESSES}" \
+             --jobs "${MAX_SUBPROCESSES}" ${OPT_PARALLEL}\
         run "${work}" "${logs}" "${ramdisk}" "${job}" {} &
-
 parallel_pid=$!
-counter=0
-while kill -0 "$parallel_pid" 2> /dev/null; do
-    sleep ${WAIT}
 
-    load_report "${job} run" "${logs}/${STAMP}.${job}.$$.load"
+# Periodically save information about resource usage
+poll_reports "$parallel_pid" "$$" "${WAIT}" &
+report_pid=$!
+echo "${report_pid} reporting resource use" >> "${ramdisk}/workers"
 
-    if [ -f "$ramdisk/workers" ]; then
-        while read pid; do
-            if kill -0 "${pid%% *}" 2> /dev/null; then
-                memory_report "${job} run" "${pid%% *}" \
-                    "${logs}/${STAMP}.${job}.${pid%% *}.memory"
-            fi
-        done < $ramdisk/workers
-    fi
+# Periodically check for outputs, encrypt if necessary,
+# and save to destination
+poll_outputs "$parallel_pid" "${output_wait}" &
+output_pid=$!
+echo "${output_pid} saving outputs asap" >> "${ramdisk}/workers"
 
-    free_memory_report "${job} run" \
-                       "${logs}/${STAMP}.${job}.$$.free"
-
-    # Check for a spot interruption notice
-    if [ "$ec2_flag" == "yes" ]; then
-        spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
-                                report "${SHUTDOWN_SIGNAL}" \
-                                "checking for interruption" \
-                                "spot interruption detected"
-    fi
-
-    # Run encryption and rclone at intervals
-    counter=$(( counter+1 ))
-    if [ "$counter" == "$skip" ]; then
-
-        # Encrypt the results
-        if [ "${encrypt_flag}" == "yes" ]; then
-            >&2 echo "${STAMP}: calling encrypt_outputs"
-            encrypt_outputs
-        fi
-
-        # Save the results to the output destination
-        send_outputs
-
-        # Reset counter if outputs have been saved
-        counter=0
-    fi
-done
+# Either run an empty loop waiting for work to complete
+# or if appropriate poll for spot interruption notices
+if [ "$ec2_flag" == "yes" ]; then
+    poll_spot_interruption "${parallel_pid}" "${WAIT}"
+else
+    while kill -0 "$parallel_pid" 2> /dev/null; do
+        sleep ${WAIT}
+    done
+fi
 
 ######################################################################
 cleanup 0
