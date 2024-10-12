@@ -228,7 +228,7 @@ while kill -0 "$parallel_pid" 2> /dev/null; do
     # Check for a spot interruption notice
     if [ "$ec2_flag" == "yes" ]; then
         spot_interruption_found "${logs}/${STAMP}.${job}.$$.metadata" ||\
-                                report report "${SHUTDOWN_SIGNAL}" \
+                                report "${SHUTDOWN_SIGNAL}" \
                                 "checking for interruption" \
                                 "spot interruption detected"
     fi
