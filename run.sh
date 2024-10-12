@@ -144,7 +144,7 @@ function run {
 
     if [[ "$run_type" == "test" ]]; then
     #---TEST-CODE---
-        for k in $(seq 1 $n_test_waits); ; do
+        for k in $(seq 1 $n_test_waits); do
             sleep ${WAIT};
             apply_niceload "${mainid}" \
                            "${ramdisk}/workers" \
